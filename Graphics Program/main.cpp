@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -8,6 +9,7 @@ int Setup(GLFWwindow*& window);			//	Try to find out what the difference is betw
 void processInput(GLFWwindow* window);
 void CreateTriangle(GLuint &vao, int &size);
 void CreateShader();
+void loadFile(const char* filename, char*& output);
 
 int main()
 {
@@ -106,6 +108,37 @@ void CreateTriangle(GLuint& vao, int& size)
 void CreateShader()
 {
 
+}
+
+void loadFile(const char* filename, char*& output) 
+{
+	//	Open the file.
+	std::ifstream file(filename, std::ios::binary);
+
+	if (file.is_open()) 
+	{
+		//	Get length of file.
+		file.seekg(0, file.end);
+		int length = file.tellg();
+		file.seekg(0, file.beg());
+
+		//	Allocate memory for the char pointer.
+		output = new char[length + 1];
+
+		//	Read data as block.
+		file.read(output, length);
+
+		//	Add null terminator to end of pointer.
+		output[length] = '\0';
+
+		//	Close the file.	
+		file.close();
+	}
+	else
+	{
+		//	If the file failed to opne, set the char pointer to NULL.
+		output = NULL;
+	}
 }
 
 void processInput(GLFWwindow* window)
