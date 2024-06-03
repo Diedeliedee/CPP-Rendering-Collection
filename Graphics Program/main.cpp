@@ -8,8 +8,14 @@
 int Setup(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
 void processInput(GLFWwindow* window);
 void CreateTriangle(GLuint &vao, int &size);
-void CreateShader();
+void createShaders();
+void createProgram(GLuint& programID, const char* vertex, const char* fragment);
+
+//	Util:
 void loadFile(const char* filename, char*& output);
+
+//	Program ID's
+GLuint simpleProgram;
 
 int main()
 {
@@ -21,7 +27,7 @@ int main()
 	int triangleSize;
 
 	CreateTriangle(triangleVAO, triangleSize);
-	CreateShader();
+	createShaders();
 
 	//	Create a viewport.
 	glViewport(0, 0, 1280, 720);
@@ -35,6 +41,8 @@ int main()
 		//	Rendering.
 		glClearColor(0.25f, 0.5f, 0.75f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glUseProgram(simpleProgram);
 
 		glBindVertexArray(triangleVAO);
 		glDrawArrays(GL_TRIANGLES, 0, triangleSize);
@@ -105,9 +113,64 @@ void CreateTriangle(GLuint& vao, int& size)
 	size = sizeof(vertices);
 }
 
-void CreateShader()
+void createShaders()
 {
+	createProgram(simpleProgram, "Shaders/simpleVertex.shader", "Shaders/simpleFragment.shader");
+}
 
+void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
+{
+	char* vertexSrc;
+	char* fragmentSrc;
+
+	int succes;
+	char infolog[512];
+
+	loadFile(vertex, vertexSrc);
+	loadFile(fragment, fragmentSrc);
+
+	GLuint vertexShaderID, fragmentShaderID;
+
+	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShaderID, 1, &vertexSrc, nullptr);
+	glCompileShader(vertexShaderID);
+	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &succes);
+
+	if (!succes)
+	{
+		glGetShaderInfoLog(vertexShaderID, 512, nullptr, infolog);
+		std::cout << "ERROR COMPILING VERTEX SHADER\n" << infolog << std::endl;
+	}
+
+	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShaderID, 1, &fragmentSrc, nullptr);
+	glCompileShader(fragmentShaderID);
+	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &succes);
+
+	if (!succes)
+	{
+		glGetShaderInfoLog(fragmentShaderID, 512, nullptr, infolog);
+		std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << infolog << std::endl;;
+	}
+
+	programID = glCreateProgram();
+	glAttachShader(programID, vertexShaderID);
+	glAttachShader(programID, fragmentShaderID);
+	glLinkProgram(programID);
+
+	glGetProgramiv(programID, GL_LINK_STATUS, &succes);
+
+	if (!succes)
+	{
+		glGetProgramInfoLog(programID, 512, nullptr, infolog);
+		std::cout << "ERROR LINKING PROGRAM INFO\n" << infolog << std::endl;;
+	}
+
+	glDeleteShader(vertexShaderID);
+	glDeleteShader(fragmentShaderID);
+
+	delete vertexSrc;
+	delete fragmentSrc;
 }
 
 void loadFile(const char* filename, char*& output) 
@@ -120,7 +183,7 @@ void loadFile(const char* filename, char*& output)
 		//	Get length of file.
 		file.seekg(0, file.end);
 		int length = file.tellg();
-		file.seekg(0, file.beg());
+		file.seekg(0, file.beg);
 
 		//	Allocate memory for the char pointer.
 		output = new char[length + 1];
