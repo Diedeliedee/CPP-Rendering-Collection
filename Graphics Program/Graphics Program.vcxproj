@@ -71,18 +71,18 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\jalph\Documents\Projects\Libraries\OpenGL\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Projects\Libraries\OpenGL\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Users\jalph\Documents\Projects\Libraries\OpenGL\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Projects\Libraries\OpenGL\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\jalph\Documents\Projects\Libraries\OpenGL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\jalph\Documents\Projects\Libraries\OpenGL\lib\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Projects\Libraries\OpenGL\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Projects\Libraries\OpenGL\lib\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\jalph\Documents\Projects\Libraries\OpenGL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\jalph\Documents\Projects\Libraries\OpenGL\lib\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Projects\Libraries\OpenGL\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Projects\Libraries\OpenGL\lib\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
