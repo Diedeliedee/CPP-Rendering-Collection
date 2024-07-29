@@ -32,5 +32,11 @@
     <None Include="Shaders\simpleVertex.shader">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\raymarchingFragment.shader">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\raymarchingVertex.shader">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
