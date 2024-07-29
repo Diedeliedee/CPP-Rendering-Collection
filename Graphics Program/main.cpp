@@ -29,9 +29,9 @@ int main()
 	int triangleSize;
 	int triangleIndexCount;
 
+	createShaders();
 	//CreateTriangle(triangleVAO, triangleSize);
 	CreateSquare(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
-	//createShaders();
 
 	//	Create a viewport.
 	glViewport(0, 0, 1280, 720);
@@ -43,7 +43,7 @@ int main()
 		processInput(window);
 
 		//	Rendering.
-		glClearColor(0.25f, 0.5f, 0.75f, 1.0f);
+		glClearColor(0.6f, 0.45f, 0.67f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(simpleProgram);
@@ -127,10 +127,11 @@ void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 {
 	float vertices[] =
 	{
-		-0.5f,	-0.5f,	0.0f,	//	0
-		0.5f,	-0.5f,	0.0f,	//	1
-		-0.5f,	0.5f,	0.0f,	//	2
-		0.5f,	0.5f,	0.0f,	//	3
+		//	Position
+		-0.5f,	-0.5f,	0.0f,	/*0*/	1.0f, 0.0f, 0.0f, 1.0f,	//	Red
+		0.5f,	-0.5f,	0.0f,	/*1*/	0.0f, 1.0f, 0.0f, 1.0f,	//	Green
+		-0.5f,	0.5f,	0.0f,	/*2*/	0.0f, 0.0f, 1.0f, 1.0f,	//	Blue
+		0.5f,	0.5f,	0.0f,	/*3*/	1.0f, 1.0f, 1.0f, 1.0f	//	White
 	};
 
 	int indices[] =
@@ -140,7 +141,8 @@ void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 	};
 
 	//	Calculating the size and indices.
-	int stride	= 3 * sizeof(float);
+	int stride = (3 + 4) * sizeof(float);
+
 	size		= sizeof(vertices) / stride;
 	numIndices	= sizeof(indices) / sizeof(int);
 
@@ -159,8 +161,11 @@ void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	//	Set layout of vertex data
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 }
 
@@ -182,22 +187,26 @@ void createProgram(GLuint& programID, const char* vertex, const char* fragment)
 
 	GLuint vertexShaderID, fragmentShaderID;
 
+	//	Creating vertex shader.
 	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShaderID, 1, &vertexSrc, nullptr);
 	glCompileShader(vertexShaderID);
-	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &succes);
 
+	//	Vertex shader error handling.
+	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &succes);
 	if (!succes)
 	{
 		glGetShaderInfoLog(vertexShaderID, 512, nullptr, infolog);
 		std::cout << "ERROR COMPILING VERTEX SHADER\n" << infolog << std::endl;
 	}
 
+	//	Creating fragment shader.
 	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShaderID, 1, &fragmentSrc, nullptr);
 	glCompileShader(fragmentShaderID);
-	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &succes);
 
+	//	Fragment shader error handling.
+	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &succes);
 	if (!succes)
 	{
 		glGetShaderInfoLog(fragmentShaderID, 512, nullptr, infolog);
@@ -210,11 +219,10 @@ void createProgram(GLuint& programID, const char* vertex, const char* fragment)
 	glLinkProgram(programID);
 
 	glGetProgramiv(programID, GL_LINK_STATUS, &succes);
-
 	if (!succes)
 	{
 		glGetProgramInfoLog(programID, 512, nullptr, infolog);
-		std::cout << "ERROR LINKING PROGRAM INFO\n" << infolog << std::endl;;
+		std::cout << "ERROR LINKING PROGRAM\n" << infolog << std::endl;;
 	}
 
 	glDeleteShader(vertexShaderID);
