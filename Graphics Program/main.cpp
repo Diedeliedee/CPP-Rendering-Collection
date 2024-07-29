@@ -7,7 +7,8 @@
 //	Forward declaration:
 int Setup(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
 void processInput(GLFWwindow* window);
-void CreateTriangle(GLuint &vao, int &size);
+void CreateTriangle(GLuint& vao, int& size);
+void CreateSquare(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 
@@ -24,10 +25,13 @@ int main()
 	if (Setup(window) < 0) return -1;
 
 	GLuint triangleVAO;
+	GLuint triangleVBO;
 	int triangleSize;
+	int triangleIndexCount;
 
-	CreateTriangle(triangleVAO, triangleSize);
-	createShaders();
+	//CreateTriangle(triangleVAO, triangleSize);
+	CreateSquare(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
+	//createShaders();
 
 	//	Create a viewport.
 	glViewport(0, 0, 1280, 720);
@@ -45,7 +49,8 @@ int main()
 		glUseProgram(simpleProgram);
 
 		glBindVertexArray(triangleVAO);
-		glDrawArrays(GL_TRIANGLES, 0, triangleSize);
+		//glDrawArrays(GL_TRIANGLES, 0, triangleSize);
+		glDrawElements(GL_TRIANGLES, triangleIndexCount, GL_UNSIGNED_INT, 0);
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -99,18 +104,64 @@ void CreateTriangle(GLuint& vao, int& size)
 		0.0f,	0.5f,	0.0f,
 	};
 
+	//	Calculating the size.
+	int stride	= 3 * sizeof(float);
+	size		= sizeof(vertices) / stride;
+
+	//	Creating the VAO index, and bingint it to create it's configuration.
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
+	//	Create buffer, bind it & assign vertices ot it.
 	GLuint VBO;
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	//	Set layout of vertex data
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+}
+
+void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
+{
+	float vertices[] =
+	{
+		-0.5f,	-0.5f,	0.0f,	//	0
+		0.5f,	-0.5f,	0.0f,	//	1
+		-0.5f,	0.5f,	0.0f,	//	2
+		0.5f,	0.5f,	0.0f,	//	3
+	};
+
+	int indices[] =
+	{
+		0, 1, 2,
+		2, 1, 3
+	};
+
+	//	Calculating the size and indices.
+	int stride	= 3 * sizeof(float);
+	size		= sizeof(vertices) / stride;
+	numIndices	= sizeof(indices) / sizeof(int);
+
+	//	Creating the VAO index, and binding it to create it's configuration.
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	//	Create buffer, bind it & assign vertices ot it.
+	GLuint VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	//	Set layout of vertex data
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	size = sizeof(vertices);
 }
 
 void createShaders()
