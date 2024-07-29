@@ -36,6 +36,8 @@ int main()
 	//	Create a viewport.
 	glViewport(0, 0, 1280, 720);
 
+	glUseProgram(simpleProgram);
+
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
 	{
@@ -46,7 +48,8 @@ int main()
 		glClearColor(0.6f, 0.45f, 0.67f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(simpleProgram);
+		glUniform2f(glGetUniformLocation(simpleProgram, "iResolution"), 1280.0f, 720.0f);
+		glUniform1f(glGetUniformLocation(simpleProgram, "iTime"), (float)glfwGetTime());
 
 		glBindVertexArray(triangleVAO);
 		//glDrawArrays(GL_TRIANGLES, 0, triangleSize);
@@ -128,10 +131,10 @@ void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 	float vertices[] =
 	{
 		//	Position
-		-0.5f,	-0.5f,	0.0f,	/*0*/	1.0f, 0.0f, 0.0f, 1.0f,	//	Red
-		0.5f,	-0.5f,	0.0f,	/*1*/	0.0f, 1.0f, 0.0f, 1.0f,	//	Green
-		-0.5f,	0.5f,	0.0f,	/*2*/	0.0f, 0.0f, 1.0f, 1.0f,	//	Blue
-		0.5f,	0.5f,	0.0f,	/*3*/	1.0f, 1.0f, 1.0f, 1.0f	//	White
+		-1.0f,	-1.0f,	0.0f,	/*0*/	1.0f, 0.0f, 0.0f, 1.0f,	//	Red
+		1.0f,	-1.0f,	0.0f,	/*1*/	0.0f, 1.0f, 0.0f, 1.0f,	//	Green
+		-1.0f,	1.0f,	0.0f,	/*2*/	0.0f, 0.0f, 1.0f, 1.0f,	//	Blue
+		1.0f,	1.0f,	0.0f,	/*3*/	1.0f, 1.0f, 1.0f, 1.0f	//	White
 	};
 
 	int indices[] =
@@ -171,7 +174,7 @@ void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 
 void createShaders()
 {
-	createProgram(simpleProgram, "Shaders/simpleVertex.shader", "Shaders/simpleFragment.shader");
+	createProgram(simpleProgram, "Shaders/raymarchingVertex.shader", "Shaders/raymarchingFragment.shader");
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 

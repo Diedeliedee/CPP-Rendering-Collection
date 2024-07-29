@@ -147,6 +147,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\raymarchingFragment.shader" />
+    <None Include="Shaders\raymarchingVertex.shader" />
     <None Include="Shaders\simpleFragment.shader" />
     <None Include="Shaders\simpleVertex.shader" />
   </ItemGroup>
