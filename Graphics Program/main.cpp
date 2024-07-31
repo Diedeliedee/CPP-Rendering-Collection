@@ -44,7 +44,7 @@ int main()
 	createShaders();
 	createCube(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
 
-	GLuint boxTex = loadTexture("textures/containter2.png");
+	GLuint boxTex = loadTexture("textures/container2.png");
 
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
@@ -69,6 +69,10 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(simpleProgram);
+
+		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
+		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 		glBindVertexArray(triangleVAO);
 		//glDrawArrays(GL_TRIANGLES, 0, triangleSize);
