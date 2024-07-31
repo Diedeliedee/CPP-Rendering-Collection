@@ -8,11 +8,11 @@
 #include "stb_image.h"
 
 //	Forward declaration:
-int Setup(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
+int setup(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
 void processInput(GLFWwindow* window);
-void CreateTriangle(GLuint& vao, int& size);
-void CreateSquare(GLuint& VAO, GLuint& VBO, int& size, int& indices);
-void CreateCube(GLuint& VAO, GLuint& VBO, int& size, int& indices);
+void createTriangle(GLuint& vao, int& size);
+void createSquare(GLuint& VAO, GLuint& VBO, int& size, int& indices);
+void createCube(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path);
@@ -27,7 +27,7 @@ int main()
 {
 	//	Initialize the window.
 	GLFWwindow* window = NULL;
-	if (Setup(window) < 0) return -1;
+	if (setup(window) < 0) return -1;
 
 	GLuint triangleVAO;
 	GLuint triangleVBO;
@@ -35,7 +35,7 @@ int main()
 	int triangleIndexCount;
 
 	createShaders();
-	CreateCube(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
+	createCube(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
 
 	GLuint boxTex = loadTexture("textures/containter2.png");
 
@@ -68,7 +68,7 @@ int main()
 	return 0;
 }
 
-int Setup(GLFWwindow*& window)
+int setup(GLFWwindow*& window)
 {
 	//	Initialize GLFW.
 	if (!glfwInit())
@@ -102,7 +102,7 @@ int Setup(GLFWwindow*& window)
 }
 
 //	Deprecated
-void CreateTriangle(GLuint& vao, int& size)
+void createTriangle(GLuint& vao, int& size)
 {
 	float vertices[] =
 	{
@@ -131,7 +131,7 @@ void CreateTriangle(GLuint& vao, int& size)
 }
 
 //	Deprecated
-void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
+void createSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 {
 	float vertices[] =
 	{
@@ -177,7 +177,7 @@ void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 
 }
 
-void CreateCube(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
+void createCube(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 {
 	// need 24 vertices for normal/uv-mapped Cube
 	float vertices[] =

@@ -151,14 +151,14 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\simpleFragment.shader" />
-    <None Include="Shaders\simpleVertex.shader" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="textures\container2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\simpleFragment.shader" />
+    <None Include="shaders\simpleVertex.shader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
