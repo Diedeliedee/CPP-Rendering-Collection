@@ -36,20 +36,21 @@ int main()
 	GLFWwindow* window = NULL;
 	if (setup(window) < 0) return -1;
 
+	//	Define vertex buffers, (I think.)
 	GLuint triangleVAO;
 	GLuint triangleVBO;
 	int triangleSize;
 	int triangleIndexCount;
 
+	//	Load resources.
 	createShaders();
 	createCube(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
-
 	GLuint boxTex = loadTexture("textures/container2.png");
 
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
 
-	//	Matrices
+	//	Define hard-coded matrices.
 	glm::mat4 world = glm::mat4(1.0f);
 	world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0, 1, 0));
 	world = glm::scale(world, glm::vec3(1, 1, 1));
@@ -78,7 +79,6 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, boxTex);
 
 		glBindVertexArray(triangleVAO);
-		//glDrawArrays(GL_TRIANGLES, 0, triangleSize);
 		glDrawElements(GL_TRIANGLES, triangleIndexCount, GL_UNSIGNED_INT, 0);
 
 		//	Swap & Poll.
