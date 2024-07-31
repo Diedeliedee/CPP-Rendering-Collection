@@ -292,7 +292,7 @@ void createCube(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 
 void createShaders()
 {
-	createProgram(simpleProgram, "Shaders/simpleVertex.shader", "Shaders/simpleFragment.shader");
+	createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
