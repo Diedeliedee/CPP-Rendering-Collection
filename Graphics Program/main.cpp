@@ -9,6 +9,7 @@ int Setup(GLFWwindow*& window);			//	Try to find out what the difference is betw
 void processInput(GLFWwindow* window);
 void CreateTriangle(GLuint& vao, int& size);
 void CreateSquare(GLuint& VAO, GLuint& VBO, int& size, int& indices);
+void CreateCube(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 
@@ -30,8 +31,7 @@ int main()
 	int triangleIndexCount;
 
 	createShaders();
-	//CreateTriangle(triangleVAO, triangleSize);
-	CreateSquare(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
+	CreateCube(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
 
 	//	Create a viewport.
 	glViewport(0, 0, 1280, 720);
@@ -95,6 +95,7 @@ int Setup(GLFWwindow*& window)
 	return 0;
 }
 
+//	Deprecated
 void CreateTriangle(GLuint& vao, int& size)
 {
 	float vertices[] =
@@ -123,6 +124,7 @@ void CreateTriangle(GLuint& vao, int& size)
 	glEnableVertexAttribArray(0);
 }
 
+//	Deprecated
 void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 {
 	float vertices[] =
@@ -165,6 +167,99 @@ void CreateSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 	glEnableVertexAttribArray(0);
 
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+}
+
+void CreateCube(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
+{
+	// need 24 vertices for normal/uv-mapped Cube
+	float vertices[] =
+	{
+		// positions            //colors            // tex coords   // normals
+		0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, -1.f, 0.f,
+		0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, -1.f, 0.f,
+		-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, -1.f, 0.f,
+		-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, -1.f, 0.f,
+
+		0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   2.f, 0.f,       1.f, 0.f, 0.f,
+		0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   2.f, 1.f,       1.f, 0.f, 0.f,
+
+		0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   1.f, 2.f,       0.f, 0.f, 1.f,
+		-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 2.f,       0.f, 0.f, 1.f,
+
+		-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   -1.f, 1.f,      -1.f, 0.f, 0.f,
+		-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   -1.f, 0.f,      -1.f, 0.f, 0.f,
+
+		-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   0.f, -1.f,      0.f, 0.f, -1.f,
+		0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   1.f, -1.f,      0.f, 0.f, -1.f,
+
+		-0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   3.f, 0.f,       0.f, 1.f, 0.f,
+		-0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   3.f, 1.f,       0.f, 1.f, 0.f,
+
+		0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, 0.f, 1.f,
+		-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, 0.f, 1.f,
+
+		-0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       -1.f, 0.f, 0.f,
+		-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       -1.f, 0.f, 0.f,
+
+		-0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 0.f, -1.f,
+		0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 0.f, -1.f,
+
+		0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       1.f, 0.f, 0.f,
+		0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       1.f, 0.f, 0.f,
+
+		0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   2.f, 0.f,       0.f, 1.f, 0.f,
+		0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   2.f, 1.f,       0.f, 1.f, 0.f
+	};
+
+	unsigned int indices[] = // note that we start from 0!
+	{
+		// DOWN
+		0, 1, 2,   // first triangle
+		0, 2, 3,    // second triangle
+		// BACK
+		14, 6, 7,   // first triangle
+		14, 7, 15,    // second triangle
+		// RIGHT
+		20, 4, 5,   // first triangle
+		20, 5, 21,    // second triangle
+		// LEFT
+		16, 8, 9,   // first triangle
+		16, 9, 17,    // second triangle
+		// FRONT
+		18, 10, 11,   // first triangle
+		18, 11, 19,    // second triangle
+		// UP
+		22, 12, 13,   // first triangle
+		22, 13, 23,    // second triangle
+	};
+
+	//	Calculating the size and indices.
+	int stride = (3 + 3 + 2 + 3) * sizeof(float);
+
+	size = sizeof(vertices) / stride;
+	numIndices = sizeof(indices) / sizeof(int);
+
+	//	Creating the VAO index, and binding it to create it's configuration.
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	//	Create buffer, bind it & assign vertices ot it.
+	GLuint VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	//	Set layout of vertex data
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 }
