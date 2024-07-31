@@ -4,6 +4,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -23,6 +27,9 @@ void loadFile(const char* filename, char*& output);
 //	Program ID's
 GLuint simpleProgram;
 
+//	Properties
+const int width = 1280, height = 720;
+
 int main()
 {
 	//	Initialize the window.
@@ -40,7 +47,16 @@ int main()
 	GLuint boxTex = loadTexture("textures/containter2.png");
 
 	//	Create a viewport.
-	glViewport(0, 0, 1280, 720);
+	glViewport(0, 0, width, height);
+
+	//	Matrices
+	glm::mat4 world = glm::mat4(1.0f);
+	world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0, 1, 0));
+	world = glm::scale(world, glm::vec3(1, 1, 1));
+	world = glm::translate(world, glm::vec3(0, 0, 0));
+
+	glm::mat4 view			= glm::lookAt(glm::vec3(0, 2.5f, -5.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	glm::mat4 projection	= glm::perspective(45.0f, width / (float)height, 0.1f, 100.0f);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
@@ -81,7 +97,7 @@ int setup(GLFWwindow*& window)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	//	Create a GLFW window.
-	window = glfwCreateWindow(1280, 720, "Graphics Program", NULL, NULL);
+	window = glfwCreateWindow(width, height, "Graphics Program", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "ERROR: Failed to create GLFW window." << std::endl;
