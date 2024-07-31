@@ -15,6 +15,7 @@ void CreateSquare(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void CreateCube(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
+GLuint loadTexture(const char* path);
 
 //	Util:
 void loadFile(const char* filename, char*& output);
@@ -35,6 +36,8 @@ int main()
 
 	createShaders();
 	CreateCube(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
+
+	GLuint boxTex = loadTexture("textures/containter2.png");
 
 	//	Create a viewport.
 	glViewport(0, 0, 1280, 720);
@@ -367,4 +370,38 @@ void processInput(GLFWwindow* window)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
+}
+
+GLuint loadTexture(const char* path)
+{
+	//	Generate and bind a texture. (Whatever that means ;_:)
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	//	Setting texture parameters.
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	//	Loading the texture.
+	int width, height, numChannels;
+	unsigned char* data = stbi_load(path, &width, &height, &numChannels, 0);
+
+	//	Setting data.
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "Error loading texture: " << path << "." << std::endl;
+;	}
+
+	//	Unloading texture.
+	stbi_image_free(data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	//	Return it.
+	return textureID;
 }
