@@ -57,7 +57,9 @@ int main()
 	world = glm::translate(world, glm::vec3(0, 0, 0));
 
 	glm::mat4 view			= glm::lookAt(glm::vec3(0, 2.5f, -5.0f), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	glm::mat4 projection	= glm::perspective(45.0f, width / (float)height, 0.1f, 100.0f);
+	glm::mat4 projection	= glm::perspective(glm::radians(25.0f), width / (float)height, 0.1f, 100.0f);
+
+	glm::vec3 lightPosition = glm::vec3(3, 3, 1);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
@@ -66,7 +68,7 @@ int main()
 		processInput(window);
 
 		//	Rendering.
-		glClearColor(0.6f, 0.45f, 0.67f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glUseProgram(simpleProgram);
@@ -74,6 +76,8 @@ int main()
 		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
 		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		glUniform3fv(glGetUniformLocation(simpleProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, boxTex);
@@ -293,6 +297,9 @@ void createCube(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
+
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE, stride, (void*)(8 * sizeof(float)));
+	glEnableVertexAttribArray(3);
 
 }
 
