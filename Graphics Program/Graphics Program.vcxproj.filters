@@ -37,6 +37,9 @@
     <Image Include="textures\container2.png">
       <Filter>Resource Files\textures</Filter>
     </Image>
+    <Image Include="textures\container2_normal.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simpleVertex.shader">
