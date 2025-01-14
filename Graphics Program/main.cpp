@@ -149,13 +149,23 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 	int index = 0;
 	for (int i = 0; i < (width * height); i++) 
 	{
-		// TODO: calculate x/z values
+		// Calculate x/z values
+		int x = i % width;
+		int z = i / width;
 
-		// TODO: set position
+		// Set position
+		vertices[index++] = x * xzScale;
+		vertices[index++] = 0;
+		vertices[index++] = z = xzScale;
 
-		// TODO: set normal
+		// Set normal
+		vertices[index++] = 0;
+		vertices[index++] = 1;
+		vertices[index++] = 0;
 
-		// TODO: set uv
+		// Set uv
+		vertices[index++] = x / float(width);
+		vertices[index++] = z / float(height);
 	}
 
 	// OPTIONAL TODO: Calculate normal
@@ -164,7 +174,19 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 	index = 0;
 	for (int i = 0; i < (width - 1) * (height - 1); i++)
 	{
+		// Calculate x/z values
+		int x = i % (width - 1);
+		int z = i / (width - 1);
 
+		int vertex = z * width + x;
+
+		indices[index++] = vertex;
+		indices[index++] = vertex + width;
+		indices[index++] = vertex + width + 1;
+
+		indices[index++] = vertex;
+		indices[index++] = vertex + width + 1;
+		indices[index++] = vertex + 1;
 	}
 
 	unsigned int vertSize = (width * height) * stride * sizeof(float);
