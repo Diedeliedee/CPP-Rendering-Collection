@@ -112,6 +112,9 @@ void renderSkybox()
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
+	glUniform3fv(glGetUniformLocation(skyProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+	glUniform3fv(glGetUniformLocation(skyProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
 	glBindVertexArray(boxVAO);
 	glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
 
