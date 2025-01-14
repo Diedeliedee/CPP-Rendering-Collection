@@ -73,8 +73,7 @@ int main()
 
 	//	Assign matrices.
 	view		= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	projection	= glm::perspective(glm::radians(25.0f), width / (float)height, 0.1f, 100.0f);
-
+	projection	= glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
@@ -286,15 +285,15 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastX = x;
 	lastY = y;
 
-	camYaw		+= dx;
-	camPitch	= glm::clamp(camPitch - dy, -90.0f, 90.0f);
+	camYaw		-= dx;
+	camPitch	= glm::clamp(camPitch + dy, -90.0f, 90.0f);
 	if (camYaw > 180.0f) camYaw -= 360.0f;
-	if (camYaw < 180.0f) camYaw += 360.0f;
+	if (camYaw < -180.0f) camYaw += 360.0f;
 
 	glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
 
-	glm::vec3 camForward	= glm::vec3(0, 0, 1) * camQuat;
-	glm::vec3 camUp			= glm::vec3(0, 1, 0) * camQuat;
+	glm::vec3 camForward	= camQuat * glm::vec3(0, 0, 1);
+	glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
 
 	view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
 }
