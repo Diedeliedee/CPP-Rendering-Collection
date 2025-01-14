@@ -22,6 +22,9 @@ void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path);
 void renderSkybox();
 
+//	Window callbacks:
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+
 //	Util:
 void loadFile(const char* filename, char*& output);
 
@@ -79,21 +82,6 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		renderSkybox();
-
-		/*
-		glUseProgram(simpleProgram);
-
-		glUniform3fv(glGetUniformLocation(simpleProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
-		glUniform3fv(glGetUniformLocation(simpleProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, boxTex);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, boxNormal);
-
-		glBindVertexArray(triangleVAO);
-		glDrawElements(GL_TRIANGLES, triangleIndexCount, GL_UNSIGNED_INT, 0);
-		*/
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -155,6 +143,9 @@ int init(GLFWwindow*& window)
 		glfwTerminate();
 		return -1;
 	}
+
+	//	Register callbacks.
+	glfwSetCursorPosCallback(window, mouse_callback);
 
 	glfwMakeContextCurrent(window);
 
@@ -270,6 +261,11 @@ void createGeometry(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 
 	glVertexAttribPointer(5, 3, GL_FLOAT, GL_TRUE, stride, (void*)(14 * sizeof(float)));
 	glEnableVertexAttribArray(5);
+
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
 
 }
 
