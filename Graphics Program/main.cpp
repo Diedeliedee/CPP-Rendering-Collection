@@ -22,6 +22,7 @@ void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path);
 void renderSkybox();
+void renderTerrain();
 unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
 
 //	Window callbacks:
@@ -51,6 +52,9 @@ float lastX, lastY;
 bool firstMouse = true;
 float camYaw, camPitch;
 
+//	Terrain data:
+GLuint terrainVAO, terrainIndexCount, heightmapID;
+
 int main()
 {
 	//	Initialize the window.
@@ -60,6 +64,8 @@ int main()
 	//	Load resources.
 	createShaders();
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
+
+	terrainVAO = GeneratePlane("textures/heightmap.png", GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
 
 	GLuint boxTex		= loadTexture("textures/container2.png");
 	GLuint boxNormal	= loadTexture("textures/container2_normal.png");
@@ -87,6 +93,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		renderSkybox();
+		renderTerrain();
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -121,6 +128,11 @@ void renderSkybox()
 
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+}
+
+void renderTerrain()
+{
+
 }
 
 unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
@@ -409,6 +421,7 @@ void createShaders()
 {
 	createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
 	createProgram(skyProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
+	createProgram(skyProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 

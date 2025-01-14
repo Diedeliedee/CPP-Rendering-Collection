@@ -40,6 +40,9 @@
     <Image Include="textures\container2_normal.png">
       <Filter>Resource Files\textures</Filter>
     </Image>
+    <Image Include="textures\heightmap.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simpleVertex.shader">
@@ -52,6 +55,12 @@
       <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="shaders\skyVertex.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\terrainVertex.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\terrainFragment.shader">
       <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>

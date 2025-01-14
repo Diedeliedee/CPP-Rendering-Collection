@@ -156,12 +156,15 @@
   <ItemGroup>
     <Image Include="textures\container2.png" />
     <Image Include="textures\container2_normal.png" />
+    <Image Include="textures\heightmap.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simpleFragment.shader" />
     <None Include="shaders\simpleVertex.shader" />
     <None Include="shaders\skyFragment.shader" />
     <None Include="shaders\skyVertex.shader" />
+    <None Include="shaders\terrainFragment.shader" />
+    <None Include="shaders\terrainVertex.shader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
