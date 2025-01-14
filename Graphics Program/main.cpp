@@ -22,6 +22,7 @@ void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path);
 void renderSkybox();
+unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
 
 //	Window callbacks:
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -122,6 +123,88 @@ void renderSkybox()
 	glEnable(GL_DEPTH_TEST);
 }
 
+unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
+{
+	int width, height, channels;
+	unsigned char* data = nullptr;
+	if (heightmap != nullptr) {
+		data = stbi_load(heightmap, &width, &height, &channels, comp);
+		if (data) {
+			glGenTextures(1, &heightmapID);
+			glBindTexture(GL_TEXTURE_2D, heightmapID);
+
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+			glGenerateMipmap(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
+	}
+
+	int stride				= 8;
+	float* vertices			= new float[(width * height) * stride];
+	unsigned int* indices	= new unsigned int[(width - 1) * (height - 1) * 6];
+
+	int index = 0;
+	for (int i = 0; i < (width * height); i++) 
+	{
+		// TODO: calculate x/z values
+
+		// TODO: set position
+
+		// TODO: set normal
+
+		// TODO: set uv
+	}
+
+	// OPTIONAL TODO: Calculate normal
+	// TODO: Set normal
+
+	index = 0;
+	for (int i = 0; i < (width - 1) * (height - 1); i++)
+	{
+
+	}
+
+	unsigned int vertSize = (width * height) * stride * sizeof(float);
+	indexCount = ((width - 1) * (height - 1) * 6);
+
+	unsigned int VAO, VBO, EBO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
+	// vertex information!
+	// position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, 0);
+	glEnableVertexAttribArray(0);
+	// normal
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 3));
+	glEnableVertexAttribArray(1);
+	// uv
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 6));
+	glEnableVertexAttribArray(2);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindVertexArray(0);
+
+	delete[] vertices;
+	delete[] indices;
+
+	stbi_image_free(data);
+
+	return VAO;
+}
+
 void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -165,7 +248,6 @@ int init(GLFWwindow*& window)
 
 	return 0;
 }
-
 
 void createGeometry(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 {
