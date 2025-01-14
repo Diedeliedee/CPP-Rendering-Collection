@@ -15,8 +15,6 @@
 //	Forward declaration:
 int init(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
 void processInput(GLFWwindow* window);
-void createTriangle(GLuint& vao, int& size);
-void createSquare(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void createGeometry(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
@@ -93,6 +91,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		renderSkybox();
+		renderTerrain();
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
