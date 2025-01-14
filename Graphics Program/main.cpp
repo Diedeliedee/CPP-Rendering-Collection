@@ -12,39 +12,45 @@
 #include "stb_image.h"
 
 //	Forward declaration:
-int setup(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
+int init(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
 void processInput(GLFWwindow* window);
 void createTriangle(GLuint& vao, int& size);
 void createSquare(GLuint& VAO, GLuint& VBO, int& size, int& indices);
-void createCube(GLuint& VAO, GLuint& VBO, int& size, int& indices);
+void createGeometry(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path);
+void renderSkybox();
 
 //	Util:
 void loadFile(const char* filename, char*& output);
 
 //	Program ID's
-GLuint simpleProgram;
+GLuint simpleProgram, skyProgram;
 
 //	Properties
 const int width = 1280, height = 720;
+
+//	World data
+glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
+glm::vec3 cameraPosition = glm::vec3(0, 2.5f, -5.0f);
+
+//	Define vertex buffers, (I think.)
+GLuint boxVAO, boxEBO;
+int boxSize, boxIndexCount;
+
+//	Matrices!
+glm::mat4 view, projection;
 
 int main()
 {
 	//	Initialize the window.
 	GLFWwindow* window = NULL;
-	if (setup(window) < 0) return -1;
-
-	//	Define vertex buffers, (I think.)
-	GLuint triangleVAO;
-	GLuint triangleVBO;
-	int triangleSize;
-	int triangleIndexCount;
+	if (init(window) < 0) return -1;
 
 	//	Load resources.
 	createShaders();
-	createCube(triangleVAO, triangleVBO, triangleSize, triangleIndexCount);
+	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
 	GLuint boxTex		= loadTexture("textures/container2.png");
 	GLuint boxNormal	= loadTexture("textures/container2_normal.png");
@@ -57,17 +63,9 @@ int main()
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
 
-	glm::vec3 lightPosition		= glm::vec3(0, 2.5f, 5.0f);
-	glm::vec3 cameraPosition	= glm::vec3(0, 2.5f, -5.0f);
-
-	//	Define hard-coded matrices.
-	glm::mat4 world = glm::mat4(1.0f);
-	world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0, 1, 0));
-	world = glm::scale(world, glm::vec3(1, 1, 1));
-	world = glm::translate(world, glm::vec3(0, 0, 0));
-
-	glm::mat4 view			= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	glm::mat4 projection	= glm::perspective(glm::radians(25.0f), width / (float)height, 0.1f, 100.0f);
+	//	Assign matrices.
+	view		= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+	projection	= glm::perspective(glm::radians(25.0f), width / (float)height, 0.1f, 100.0f);
 
 
 	//	Game loop.
@@ -80,11 +78,10 @@ int main()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(simpleProgram);
+		renderSkybox();
 
-		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		/*
+		glUseProgram(simpleProgram);
 
 		glUniform3fv(glGetUniformLocation(simpleProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
 		glUniform3fv(glGetUniformLocation(simpleProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
@@ -96,6 +93,7 @@ int main()
 
 		glBindVertexArray(triangleVAO);
 		glDrawElements(GL_TRIANGLES, triangleIndexCount, GL_UNSIGNED_INT, 0);
+		*/
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -107,7 +105,31 @@ int main()
 	return 0;
 }
 
-int setup(GLFWwindow*& window)
+void renderSkybox()
+{
+	glUseProgram(skyProgram);
+
+	glm::mat4 world = glm::mat4(1.0f);
+	world = glm::translate(world, cameraPosition);
+	world = glm::scale(world, glm::vec3(10, 10, 10));
+
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	glBindVertexArray(boxVAO);
+	glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
+}
+
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	{
+		glfwSetWindowShouldClose(window, true);
+	}
+}
+
+int init(GLFWwindow*& window)
 {
 	//	Initialize GLFW.
 	if (!glfwInit())
@@ -140,83 +162,8 @@ int setup(GLFWwindow*& window)
 	return 0;
 }
 
-//	Deprecated
-void createTriangle(GLuint& vao, int& size)
-{
-	float vertices[] =
-	{
-		-0.5f,	-0.5f,	0.0f,
-		0.5f,	-0.5f,	0.0f,
-		0.0f,	0.5f,	0.0f,
-	};
 
-	//	Calculating the size.
-	int stride	= 3 * sizeof(float);
-	size		= sizeof(vertices) / stride;
-
-	//	Creating the VAO index, and bingint it to create it's configuration.
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	//	Create buffer, bind it & assign vertices ot it.
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	//	Set layout of vertex data
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-}
-
-//	Deprecated
-void createSquare(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
-{
-	float vertices[] =
-	{
-		//	Position
-		-0.5f,	-0.5f,	0.0f,	/*0*/	1.0f, 0.0f, 0.0f, 1.0f,	//	Red
-		0.5f,	-0.5f,	0.0f,	/*1*/	0.0f, 1.0f, 0.0f, 1.0f,	//	Green
-		-0.5f,	0.5f,	0.0f,	/*2*/	0.0f, 0.0f, 1.0f, 1.0f,	//	Blue
-		0.5f,	0.5f,	0.0f,	/*3*/	1.0f, 1.0f, 1.0f, 1.0f	//	White
-	};
-
-	int indices[] =
-	{
-		0, 1, 2,
-		2, 1, 3
-	};
-
-	//	Calculating the size and indices.
-	int stride = (3 + 4) * sizeof(float);
-
-	size		= sizeof(vertices) / stride;
-	numIndices	= sizeof(indices) / sizeof(int);
-
-	//	Creating the VAO index, and binding it to create it's configuration.
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	//	Create buffer, bind it & assign vertices ot it.
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	//	Set layout of vertex data
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-}
-
-void createCube(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
+void createGeometry(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 {
 	// need 24 vertices for normal/uv-mapped Cube
 	float vertices[] = {
@@ -323,6 +270,7 @@ void createCube(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 void createShaders()
 {
 	createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
+	createProgram(skyProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
@@ -414,13 +362,6 @@ void loadFile(const char* filename, char*& output)
 	}
 }
 
-void processInput(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(window, true);
-	}
-}
 
 GLuint loadTexture(const char* path)
 {
