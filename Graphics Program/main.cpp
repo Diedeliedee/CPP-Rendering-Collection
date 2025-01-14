@@ -32,7 +32,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void loadFile(const char* filename, char*& output);
 
 //	Program ID's
-GLuint simpleProgram, skyProgram;
+GLuint simpleProgram, skyProgram, terrainProgram;
 
 //	Properties
 const int width = 1280, height = 720;
@@ -108,13 +108,13 @@ int main()
 void renderSkybox()
 {
 	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH);
 
 	glUseProgram(skyProgram);
 
-	glm::mat4 world = glm::mat4(1.0f);
-	world = glm::translate(world, cameraPosition);
-	world = glm::scale(world, glm::vec3(100, 100, 100));
+	glm::mat4 world	= glm::mat4(1.0f);
+	world			= glm::translate(world, cameraPosition);
+	world			= glm::scale(world, glm::vec3(100, 100, 100));
 
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -127,12 +127,30 @@ void renderSkybox()
 	glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
 
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH);
 }
 
 void renderTerrain()
 {
+	glEnable(GL_DEPTH);
+	glEnable(GL_CULL_FACE);
+	//lEnable(GL_DEPTH_TEST);
+	glCullFace(GL_BACK);
 
+	glUseProgram(terrainProgram);
+
+	glm::mat4 world	= glm::mat4(1.0f);
+
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+	//	Rendering
+	glBindVertexArray(terrainVAO);
+	glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
 }
 
 unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
@@ -421,7 +439,7 @@ void createShaders()
 {
 	createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
 	createProgram(skyProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
-	createProgram(skyProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
+	createProgram(terrainProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
@@ -512,7 +530,6 @@ void loadFile(const char* filename, char*& output)
 		output = NULL;
 	}
 }
-
 
 GLuint loadTexture(const char* path)
 {
