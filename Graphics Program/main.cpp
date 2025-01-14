@@ -132,9 +132,8 @@ void renderSkybox()
 
 void renderTerrain()
 {
-	glEnable(GL_DEPTH);
 	glEnable(GL_CULL_FACE);
-	//lEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	glCullFace(GL_BACK);
 
 	glUseProgram(terrainProgram);
@@ -157,9 +156,11 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 {
 	int width, height, channels;
 	unsigned char* data = nullptr;
-	if (heightmap != nullptr) {
+	if (heightmap != nullptr)
+	{
 		data = stbi_load(heightmap, &width, &height, &channels, comp);
-		if (data) {
+		if (data)
+		{
 			glGenTextures(1, &heightmapID);
 			glBindTexture(GL_TEXTURE_2D, heightmapID);
 
@@ -194,8 +195,8 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 		vertices[index++] = 0;
 
 		// Set uv
-		vertices[index++] = x / float(width);
-		vertices[index++] = z / float(height);
+		vertices[index++] = x / (float)width;
+		vertices[index++] = z / (float)height;
 	}
 
 	// OPTIONAL TODO: Calculate normal
