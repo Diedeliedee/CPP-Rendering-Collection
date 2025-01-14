@@ -18,5 +18,5 @@ void main()
 
 	//	Specular data
 	vec3 viewDir	= normalize(worldPosition - cameraPosition);
-	FragColor		= vec4(lerp(botColor, topColor, max(viewDir.y, 0.0)), 1);
+	FragColor		= vec4(lerp(botColor, topColor, abs(viewDir.y)), 1);
 }
