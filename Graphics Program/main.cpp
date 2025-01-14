@@ -106,7 +106,7 @@ void renderSkybox()
 
 	glm::mat4 world = glm::mat4(1.0f);
 	world = glm::translate(world, cameraPosition);
-	world = glm::scale(world, glm::vec3(10, 10, 10));
+	world = glm::scale(world, glm::vec3(100, 100, 100));
 
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
 	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
@@ -290,8 +290,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 	camYaw		-= dx;
 	camPitch	= glm::clamp(camPitch + dy, -90.0f, 90.0f);
-	if (camYaw > 180.0f) camYaw -= 360.0f;
-	if (camYaw < -180.0f) camYaw += 360.0f;
+	if (camYaw > 180.0f)	camYaw -= 360.0f;
+	if (camYaw < -180.0f)	camYaw += 360.0f;
 
 	glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
 
