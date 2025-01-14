@@ -20,7 +20,6 @@ void main()
 
 	//	Calculate view
 	vec3 viewDir	= normalize(worldPosition - cameraPosition);
-
 	float  sun		= max(pow(dot(-viewDir, lightDirection), 128), 0.0);
 
 	FragColor		= vec4(lerp(botColor, topColor, abs(viewDir.y)) + sun * sunColor, 1);
