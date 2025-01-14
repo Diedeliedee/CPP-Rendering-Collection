@@ -107,6 +107,9 @@ int main()
 
 void renderSkybox()
 {
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+
 	glUseProgram(skyProgram);
 
 	glm::mat4 world = glm::mat4(1.0f);
@@ -119,6 +122,9 @@ void renderSkybox()
 
 	glBindVertexArray(boxVAO);
 	glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
+
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void processInput(GLFWwindow* window)
