@@ -39,7 +39,7 @@ const int width = 1280, height = 720;
 
 //	World data
 glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
-glm::vec3 cameraPosition = glm::vec3(0, 2.5f, -5.0f);
+glm::vec3 cameraPosition = glm::vec3(100.0f, 125.5f, 100.0f);
 
 //	Define vertex buffers, (I think.)
 GLuint boxVAO, boxEBO;
@@ -80,7 +80,7 @@ int main()
 
 	//	Assign matrices.
 	view		= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	projection	= glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 100.0f);
+	projection	= glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 5000.0f);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
@@ -93,7 +93,6 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		renderSkybox();
-		renderTerrain();
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -132,8 +131,8 @@ void renderSkybox()
 
 void renderTerrain()
 {
+	glEnable(GL_DEPTH);
 	glEnable(GL_CULL_FACE);
-	//glEnable(GL_DEPTH_TEST);
 	glCullFace(GL_BACK);
 
 	glUseProgram(terrainProgram);
@@ -146,6 +145,9 @@ void renderTerrain()
 
 	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
 	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, heightmapID);
 
 	//	Rendering
 	glBindVertexArray(terrainVAO);
