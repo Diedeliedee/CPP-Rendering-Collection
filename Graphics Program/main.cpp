@@ -45,6 +45,10 @@ int boxSize, boxIndexCount;
 //	Matrices!
 glm::mat4 view, projection;
 
+float lastX, lastY;
+bool firstMouse = true;
+float camYaw, camPitch;
+
 int main()
 {
 	//	Initialize the window.
@@ -266,7 +270,24 @@ void createGeometry(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+	float x = (float)xpos;
+	float y = (float)ypos;
 
+	if (firstMouse)
+	{
+		lastX = x;
+		lastY = y;
+	}
+
+	float dx = x - lastX;
+	float dy = y - lastY;
+	lastX = x;
+	lastY = y;
+
+	camYaw		+= dx;
+	camPitch	= glm::clamp(camPitch + dy, -90.0f, 90.0f);
+	if (camYaw > 180.0f) camYaw -= 360.0f;
+	if (camYaw < 180.0f) camYaw += 360.0f;
 }
 
 void createShaders()
