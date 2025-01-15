@@ -25,6 +25,9 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 
 //	Window callbacks:
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+
+bool keys[1024];
 
 //	Util:
 void loadFile(const char* filename, char*& output);
@@ -37,7 +40,7 @@ const int width = 1280, height = 720;
 
 //	World data
 glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
-glm::vec3 cameraPosition = glm::vec3(100.0f, 125.5f, 100.0f);
+glm::vec3 cameraPosition = glm::vec3(0, 10, 0);
 
 //	Define vertex buffers, (I think.)
 GLuint boxVAO, boxEBO;
@@ -49,6 +52,7 @@ glm::mat4 view, projection;
 float lastX, lastY;
 bool firstMouse = true;
 float camYaw, camPitch;
+glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
 
 //	Terrain data:
 GLuint terrainVAO, terrainIndexCount, heightmapID;
@@ -265,6 +269,37 @@ void processInput(GLFWwindow* window)
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
+
+	bool camChanged = false;
+
+	if (keys[GLFW_KEY_W])
+	{
+		cameraPosition += camQuat * glm::vec3(0, 0, 1);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_S])
+	{
+		cameraPosition += camQuat * glm::vec3(0, 0, -1);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_A])
+	{
+		cameraPosition += camQuat * glm::vec3(1, 0, 0);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_D])
+	{
+		cameraPosition += camQuat * glm::vec3(-1, 0, 0);
+		camChanged = true;
+	}
+
+	if (camChanged)
+	{
+		glm::vec3 camForward	= camQuat * glm::vec3(0, 0, 1);
+		glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
+
+		view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
+	}
 }
 
 int init(GLFWwindow*& window)
@@ -290,6 +325,7 @@ int init(GLFWwindow*& window)
 
 	//	Register callbacks.
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetKeyCallback(window, key_callback);
 
 	glfwMakeContextCurrent(window);
 
@@ -435,6 +471,17 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
 
 	view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
+}
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+	{
+		keys[key] = true;
+	}
+	else if (action == GLFW_RELEASE)
+	{
+		keys[key] = false;
+	}
 }
 
 void createShaders()
