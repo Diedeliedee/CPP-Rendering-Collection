@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <chrono>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -48,17 +49,21 @@ int main()
 
 	GLuint boxTex		= loadTexture("textures/container2.png");
 	GLuint boxNormal	= loadTexture("textures/container2_normal.png");
+	GLuint boxSpecular	= loadTexture("textures/specularity.png");
 
 	//	Set texture channels.
 	glUseProgram(simpleProgram);
 	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"), 0);
 	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
+	glUniform1i(glGetUniformLocation(simpleProgram, "specularTex"), 2);
 
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
 
 	glm::vec3 lightPosition		= glm::vec3(0, 2.5f, 5.0f);
 	glm::vec3 cameraPosition	= glm::vec3(0, 2.5f, -5.0f);
+	glm::vec3 ambientLightColor = glm::vec3(0.99, 0.9, 0.44);
+	glm::vec3 lightColor		= glm::vec3(0, 0, 0);
 
 	//	Define hard-coded matrices.
 	glm::mat4 world = glm::mat4(1.0f);
@@ -69,6 +74,8 @@ int main()
 	glm::mat4 view			= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 	glm::mat4 projection	= glm::perspective(glm::radians(25.0f), width / (float)height, 0.1f, 100.0f);
 
+	//	Time preparations
+	auto timeStart	= std::chrono::high_resolution_clock::now();
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
@@ -82,17 +89,32 @@ int main()
 
 		glUseProgram(simpleProgram);
 
+		//	Calculating time passed.
+		auto current	= std::chrono::high_resolution_clock::now();
+		auto duration	= (GLfloat)std::chrono::duration_cast<std::chrono::duration<float>>(current - timeStart).count();
+
+		//	Calculating light RGB.
+		lightColor.x = (sin(duration * 3)		* 0.5 + 1) * 1.5;
+		lightColor.y = (sin(duration * 3 + 1)	* 0.5 + 1) * 1.5;
+		lightColor.z = (sin(duration * 3 + 2)	* 0.5 + 1) * 1.5;
+
 		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
 		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 		glUniform3fv(glGetUniformLocation(simpleProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
 		glUniform3fv(glGetUniformLocation(simpleProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+		glUniform3fv(glGetUniformLocation(simpleProgram, "lightColor"), 1, glm::value_ptr(lightColor));
+		glUniform3fv(glGetUniformLocation(simpleProgram, "ambientLightColor"), 1, glm::value_ptr(ambientLightColor));
+
+		glUniform1f(glGetUniformLocation(simpleProgram, "time"), duration);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, boxTex);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, boxNormal);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, boxSpecular);
 
 		glBindVertexArray(triangleVAO);
 		glDrawElements(GL_TRIANGLES, triangleIndexCount, GL_UNSIGNED_INT, 0);

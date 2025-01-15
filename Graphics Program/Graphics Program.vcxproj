@@ -156,6 +156,7 @@
   <ItemGroup>
     <Image Include="textures\container2.png" />
     <Image Include="textures\container2_normal.png" />
+    <Image Include="textures\specularity.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simpleFragment.shader" />
