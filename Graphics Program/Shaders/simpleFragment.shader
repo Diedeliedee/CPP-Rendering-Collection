@@ -26,9 +26,6 @@ void main()
 	vec3 normal	= texture(normalTex, uv).rgb;
 	normal		= normalize(normal * 2.0 - 1.0);
 
-	//	specular
-	vec3 specularStuff = texture(normalTex, uv).rgb;
-
 	//	Adjusting normal strength.
 	normal.rg	= normal.rg * 0.5f;
 	normal		= normalize(normal);
@@ -44,11 +41,11 @@ void main()
 	//	Lighting
 	vec3 ambient	= ambientLightColor	* 0.25;
 	vec3 light		= lightColor		* max(-dot(normal, lightDirection), 0.0);
-	float specular	= pow(max(-dot(reflDir, viewDir), 0.0), 256);
+	float specular	= texture(specularTex, uv).x * pow(max(-dot(reflDir, viewDir), 0.0), 512);
 
 	vec4 output	= diffuse;
 	output.rgb	*= ambient + light;
 	output.rgb	+= specular;
 
-	FragColor = vec4(specularStuff, 1.0f);
+	FragColor = output;
 }
