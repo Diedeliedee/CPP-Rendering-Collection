@@ -15,16 +15,22 @@ uniform mat4	world,
 				view,
 				projection;
 
+uniform float time;
+
 void main()
 {
-	gl_Position	= projection * view * world * vec4(aPos, 1.0);
-	color		= vColor;
-	uv			= vUV;
+	vec3 p = aPos;
+
+	p.y			+= sin(time * 2) * 0.25;
+	gl_Position	= projection * view * world * vec4(p, 1.0);
+
+	color	= vColor;
+	uv		= vUV;
 
 	vec3 t	= normalize(mat3(world) * vTangent);
 	vec3 b	= normalize(mat3(world) * vBitangent);
 	vec3 n	= normalize(mat3(world) * vNormal);
 	tbn		= mat3(t, b, n);
 
-	worldPosition	= mat3(world) * aPos;
+	worldPosition	= mat3(world) * p;
 }
