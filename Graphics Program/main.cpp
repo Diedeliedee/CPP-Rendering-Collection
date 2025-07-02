@@ -465,7 +465,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	if (camYaw > 180.0f)	camYaw -= 360.0f;
 	if (camYaw < -180.0f)	camYaw += 360.0f;
 
-	glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
+	camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
 
 	glm::vec3 camForward	= camQuat * glm::vec3(0, 0, 1);
 	glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
