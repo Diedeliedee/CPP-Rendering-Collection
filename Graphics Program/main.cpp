@@ -192,7 +192,7 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 		// Set position
 		vertices[index++] = x * xzScale;
 		vertices[index++] = 0;
-		vertices[index++] = z = xzScale;
+		vertices[index++] = z * xzScale;
 
 		// Set normal
 		vertices[index++] = 0;
