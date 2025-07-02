@@ -63,6 +63,11 @@ int main()
 	GLFWwindow* window = NULL;
 	if (init(window) < 0) return -1;
 
+	//	Checking OpenGL and GLSL versions, and active GPU
+	std::cout << "OpenGL version: "	<< glGetString(GL_VERSION)					<< std::endl;
+	std::cout << "GLSL version: "	<< glGetString(GL_SHADING_LANGUAGE_VERSION)	<< std::endl;
+	std::cout << "Renderer: "		<< glGetString(GL_RENDERER)					<< std::endl;
+
 	//	Load resources.
 	createShaders();
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
