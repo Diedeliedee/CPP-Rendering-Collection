@@ -36,8 +36,8 @@ void main()
 
 	//	Separate RGB and alpha.
 	//	Multiplying specular with color seems to be a mettalic property. More research required.
-	vec4 output	= vec4(color, 1.0f) * texture(diffuseTex, uv);
-	output.rgb	= output.rgb * min(lightValue + 0.1, 1.0) + specular * output.rgb;
+	vec4 _output	= vec4(color, 1.0f) * texture(diffuseTex, uv);
+	_output.rgb		= _output.rgb * min(lightValue + 0.1, 1.0) + specular * _output.rgb;
 
-	FragColor = output;
+	FragColor = _output;
 }

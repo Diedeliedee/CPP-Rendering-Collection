@@ -26,8 +26,8 @@ void main()
 	//float specular		= pow(max(-dot(reflDir, viewDir), 0.0), 64);
 
 	//	Separate RGB and alpha.
-	vec4 output	= texture(diffuseTex, uv);
-	output.rgb	= output.rgb * min(lightValue + 0.1, 1.0); // + specular * output.rgb;
+	vec4 _output	= texture(diffuseTex, uv);
+	_output.rgb		= _output.rgb * min(lightValue + 0.1, 1.0); // + specular * _output.rgb;
 
-	FragColor = output;
+	FragColor = _output;
 }
