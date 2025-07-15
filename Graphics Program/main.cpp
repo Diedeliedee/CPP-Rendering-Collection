@@ -40,7 +40,7 @@ const int width = 1280, height = 720;
 
 //	World data
 glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
-glm::vec3 cameraPosition = glm::vec3(0, 10, 0);
+glm::vec3 cameraPosition = glm::vec3(0, 100, 0);
 
 //	Define vertex buffers, (I think.)
 GLuint boxVAO, boxEBO;
@@ -87,7 +87,7 @@ int main()
 
 	//	Assign matrices.
 	view		= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	projection	= glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 5000.0f);
+	projection	= glm::perspective(glm::radians(75.0f), width / (float)height, 0.1f, 5000.0f);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
