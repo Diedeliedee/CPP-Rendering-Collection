@@ -21,7 +21,7 @@ void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path);
 void renderSkybox();
 void renderTerrain();
-unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
+unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
 
 //	Window callbacks:
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -56,6 +56,7 @@ glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(cam
 
 //	Terrain data:
 GLuint terrainVAO, terrainIndexCount, heightmapID;
+unsigned char* heightmapTexture;
 
 int main()
 {
@@ -72,7 +73,7 @@ int main()
 	createShaders();
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
-	terrainVAO = GeneratePlane("textures/heightmap.png", GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
+	terrainVAO = GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
 
 	GLuint boxTex		= loadTexture("textures/container2.png");
 	GLuint boxNormal	= loadTexture("textures/container2_normal.png");
@@ -164,10 +165,10 @@ void renderTerrain()
 	glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
 }
 
-unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
+unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
 {
 	int width, height, channels;
-	unsigned char* data = nullptr;
+	data = nullptr;
 	if (heightmap != nullptr)
 	{
 		data = stbi_load(heightmap, &width, &height, &channels, comp);
@@ -196,9 +197,11 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 		int x = i % width;
 		int z = i / width;
 
+		float texHeight = (float)data[i * comp];
+
 		// Set position
 		vertices[index++] = x * xzScale;
-		vertices[index++] = 0;
+		vertices[index++] = (texHeight / 255.0f) * hScale;
 		vertices[index++] = z * xzScale;
 
 		// Set normal
@@ -265,7 +268,7 @@ unsigned int GeneratePlane(const char* heightmap, GLenum format, int comp, float
 	delete[] vertices;
 	delete[] indices;
 
-	stbi_image_free(data);
+	// stbi_image_free(data);
 
 	return VAO;
 }
