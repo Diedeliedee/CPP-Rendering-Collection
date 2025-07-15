@@ -97,7 +97,7 @@ int main()
 
 		//	Rendering.
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		renderSkybox();
 		renderTerrain();
@@ -115,6 +115,7 @@ int main()
 void renderSkybox()
 {
 	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_DEPTH);
 
 	glUseProgram(skyProgram);
@@ -140,6 +141,7 @@ void renderSkybox()
 void renderTerrain()
 {
 	glEnable(GL_DEPTH);
+	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
