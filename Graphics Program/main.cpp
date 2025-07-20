@@ -502,8 +502,8 @@ void createShaders()
 	createProgram(terrainProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
 
 	glUseProgram(terrainProgram);
-	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"), 0);
-	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
+	glUniform1i(glGetUniformLocation(terrainProgram, "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"), 1);
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
