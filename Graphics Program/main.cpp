@@ -75,7 +75,7 @@ int main()
 	createShaders();
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
-	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
+	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 250.0f, 10.0f, terrainIndexCount, heightmapID);
 	heightNormalID	= loadTexture("textures/heightnormal.png");
 
 	dirt	= loadTexture("textures/dirt.jpg");
@@ -89,7 +89,7 @@ int main()
 
 	//	Assign matrices.
 	view		= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	projection	= glm::perspective(glm::radians(75.0f), width / (float)height, 0.1f, 5000.0f);
+	projection	= glm::perspective(glm::radians(75.0f), width / (float)height, 0.1f, 10000.0f);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
