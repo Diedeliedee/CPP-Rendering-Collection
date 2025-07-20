@@ -15,6 +15,9 @@ void main()
 	//	Normal calculation.
 	vec3 normal	= texture(normalTex, uv).rgb;
 	normal		= normalize(normal * 2.0 - 1.0);
+	normal.gb	= normal.bg;						//	Flip normal channels because of conventions
+	normal.r	= -normal.r;						//	Flips red axis.
+	normal.b	= -normal.b;						//	Flips blue axis.
 
 	//	Specular data
 	//vec3 viewDir		= normalize(worldPosition - cameraPosition);
