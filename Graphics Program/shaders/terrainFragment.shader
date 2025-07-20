@@ -27,7 +27,7 @@ void main()
 	normal.b	= -normal.b;						//	Flips blue axis.
 
 	//	Specular data
-	//vec3 viewDir		= normalize(worldPosition - cameraPosition);
+	vec3 viewDir		= normalize(worldPosition.rgb - cameraPosition);
 	//vec3 reflDir		= normalize(reflect(lightDirection, normal));
 	
 	//	Lighting
@@ -69,8 +69,19 @@ void main()
 	diffuse = lerp(diffuse, rockColor, gr);
 	diffuse = lerp(diffuse, snowColor, rs);
 
-	//	Separate RGB and alpha.
-	vec4 _output = vec4(diffuse * min(lightValue + 0.1, 1.0), 1.0); // + specular * _output.rgb;
+	float fog = pow(clamp((dist - 250) / 1000, 0, 1), 2);
+
+	vec3 topColor = vec3(68.0 / 255.0, 118.0 / 255.0, 189.0 / 255.0);
+	vec3 botColor = vec3(188.0 / 255.0, 214.0 / 255.0, 231.0 / 255.0);
+	
+	vec3 fogColor = lerp(botColor, topColor, max(viewDir.y, 0.0));
+
+	//	Combining effects.
+	vec4 _output	= vec4(0, 0, 0, 1);							//	Declaring output.
+	_output.rgb		= diffuse;									//	Applying diffuse.
+	_output.rgb		*= min(lightValue + 0.1, 1.0);				//	Applying shadows.
+	//_output.rgb	+= specular * _output.rgb					//	Applying specular?
+	_output.rgb		= lerp(_output.rgb, fogColor, fog);			//	Applying fog.
 
 	FragColor = _output;
 }
