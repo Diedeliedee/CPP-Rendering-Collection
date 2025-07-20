@@ -71,6 +71,9 @@ int main()
 	std::cout << "GLSL version: "	<< glGetString(GL_SHADING_LANGUAGE_VERSION)	<< std::endl;
 	std::cout << "Renderer: "		<< glGetString(GL_RENDERER)					<< std::endl;
 
+	//	Setting framerate cap.
+	glfwSwapInterval(1);
+
 	//	Load resources.
 	createShaders();
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
@@ -301,22 +304,22 @@ void processInput(GLFWwindow* window)
 
 	if (keys[GLFW_KEY_W])
 	{
-		cameraPosition += camQuat * glm::vec3(0, 0, 1);
+		cameraPosition += camQuat * glm::vec3(0, 0, 10);
 		camChanged = true;
 	}
 	if (keys[GLFW_KEY_S])
 	{
-		cameraPosition += camQuat * glm::vec3(0, 0, -1);
+		cameraPosition += camQuat * glm::vec3(0, 0, -10);
 		camChanged = true;
 	}
 	if (keys[GLFW_KEY_A])
 	{
-		cameraPosition += camQuat * glm::vec3(1, 0, 0);
+		cameraPosition += camQuat * glm::vec3(10, 0, 0);
 		camChanged = true;
 	}
 	if (keys[GLFW_KEY_D])
 	{
-		cameraPosition += camQuat * glm::vec3(-1, 0, 0);
+		cameraPosition += camQuat * glm::vec3(-10, 0, 0);
 		camChanged = true;
 	}
 
