@@ -78,7 +78,7 @@ int main()
 	createShaders();
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
-	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 250.0f, 10.0f, terrainIndexCount, heightmapID);
+	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 250.0f, 8.0f, terrainIndexCount, heightmapID);
 	heightNormalID	= loadTexture("textures/heightnormal.png");
 
 	dirt	= loadTexture("textures/dirt.jpg");
