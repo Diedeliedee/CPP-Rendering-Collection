@@ -46,6 +46,21 @@
     <Image Include="textures\heightnormal.png">
       <Filter>Resource Files\textures</Filter>
     </Image>
+    <Image Include="textures\dirt.jpg">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="textures\grass.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="textures\rock.jpg">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="textures\sand.jpg">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
+    <Image Include="textures\snow.jpg">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simpleVertex.shader">

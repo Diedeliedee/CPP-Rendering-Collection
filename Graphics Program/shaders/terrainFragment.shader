@@ -7,6 +7,8 @@ in vec3	worldPosition;
 uniform sampler2D diffuseTex;
 uniform sampler2D normalTex;
 
+uniform sampler2D dirt, sand, grass, rock, snow;
+
 uniform vec3 lightDirection;
 uniform vec3 cameraPosition;
 
@@ -28,8 +30,8 @@ void main()
 	//float specular		= pow(max(-dot(reflDir, viewDir), 0.0), 64);
 
 	//	Separate RGB and alpha.
-	vec4 _output	= texture(diffuseTex, uv);
-	_output.rgb		= vec3(min(lightValue + 0.1, 1.0));//_output.rgb * min(lightValue + 0.1, 1.0); // + specular * _output.rgb;
+	vec4 _output	= texture(dirt, uv);
+	_output.rgb		= _output.rgb * min(lightValue + 0.1, 1.0); // + specular * _output.rgb;
 
 	FragColor = _output;
 }

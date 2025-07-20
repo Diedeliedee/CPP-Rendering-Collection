@@ -156,8 +156,13 @@
   <ItemGroup>
     <Image Include="textures\container2.png" />
     <Image Include="textures\container2_normal.png" />
+    <Image Include="textures\dirt.jpg" />
+    <Image Include="textures\grass.png" />
     <Image Include="textures\heightmap.png" />
     <Image Include="textures\heightnormal.png" />
+    <Image Include="textures\rock.jpg" />
+    <Image Include="textures\sand.jpg" />
+    <Image Include="textures\snow.jpg" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simpleFragment.shader" />

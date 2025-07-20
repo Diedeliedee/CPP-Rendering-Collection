@@ -18,7 +18,7 @@ void processInput(GLFWwindow* window);
 void createGeometry(GLuint& VAO, GLuint& VBO, int& size, int& indices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
-GLuint loadTexture(const char* path);
+GLuint loadTexture(const char* path, int comp = 0);
 void renderSkybox();
 void renderTerrain();
 unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
@@ -58,6 +58,8 @@ glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(cam
 GLuint terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
 unsigned char* heightmapTexture;
 
+GLuint dirt, sand, grass, rock, snow;
+
 int main()
 {
 	//	Initialize the window.
@@ -75,6 +77,12 @@ int main()
 
 	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
 	heightNormalID	= loadTexture("textures/heightnormal.png");
+
+	dirt	= loadTexture("textures/dirt.jpg");
+	sand	= loadTexture("textures/sand.jpg");
+	grass	= loadTexture("textures/grass.png", 4);
+	rock	= loadTexture("textures/rock.jpg");
+	snow	= loadTexture("textures/snow.jpg");
 
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
@@ -157,6 +165,17 @@ void renderTerrain()
 	glBindTexture(GL_TEXTURE_2D, heightmapID);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, heightNormalID);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, dirt);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, sand);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, grass);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, rock);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, snow);
 
 	//	Rendering
 	glBindVertexArray(terrainVAO);
@@ -507,6 +526,12 @@ void createShaders()
 	glUseProgram(terrainProgram);
 	glUniform1i(glGetUniformLocation(terrainProgram, "diffuseTex"), 0);
 	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"), 1);
+
+	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"), 2);
+	glUniform1i(glGetUniformLocation(terrainProgram, "sand"), 3);
+	glUniform1i(glGetUniformLocation(terrainProgram, "grass"), 4);
+	glUniform1i(glGetUniformLocation(terrainProgram, "rock"), 5);
+	glUniform1i(glGetUniformLocation(terrainProgram, "snow"), 6);
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
@@ -598,7 +623,7 @@ void loadFile(const char* filename, char*& output)
 	}
 }
 
-GLuint loadTexture(const char* path)
+GLuint loadTexture(const char* path, int comp)
 {
 	//	Generate and bind a texture. (Whatever that means ;_:)
 	GLuint textureID;
@@ -611,11 +636,13 @@ GLuint loadTexture(const char* path)
 
 	//	Loading the texture.
 	int width, height, numChannels;
-	unsigned char* data = stbi_load(path, &width, &height, &numChannels, 0);
+	unsigned char* data = stbi_load(path, &width, &height, &numChannels, comp);
 
 	//	Setting data.
 	if (data)
 	{
+		if (comp != 0) numChannels = comp;
+
 		if		(numChannels == 3)	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		else if (numChannels == 4)	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
