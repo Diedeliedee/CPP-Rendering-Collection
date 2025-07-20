@@ -42,11 +42,26 @@ void main()
 	float gr = clamp((y - 150) / 10, -1, 1) * .5 + .5;
 	float rs = clamp((y - 200) / 10, -1, 1) * .5 + .5;
 
-	vec3 dirtColor	= texture(dirt, uv * 10).rgb;
-	vec3 sandColor	= texture(sand, uv * 10).rgb;
-	vec3 grassColor	= texture(grass, uv * 10).rgb;
-	vec3 rockColor	= texture(rock, uv * 10).rgb;
-	vec3 snowColor	= texture(snow, uv * 10).rgb;
+	float dist		= length(worldPosition.xyz - cameraPosition);
+	float uvLerp	= clamp((dist - 250) / 150, -1, 1) * .5 + .5;
+
+	vec3 dirtColorClose		= texture(dirt, uv * 100).rgb;
+	vec3 sandColorClose		= texture(sand, uv * 100).rgb;
+	vec3 grassColorClose	= texture(grass, uv * 100).rgb;
+	vec3 rockColorClose		= texture(rock, uv * 100).rgb;
+	vec3 snowColorClose		= texture(snow, uv * 100).rgb;
+
+	vec3 dirtColorFar	= texture(dirt, uv * 10).rgb;
+	vec3 sandColorFar	= texture(sand, uv * 10).rgb;
+	vec3 grassColorFar	= texture(grass, uv * 10).rgb;
+	vec3 rockColorFar	= texture(rock, uv * 10).rgb;
+	vec3 snowColorFar	= texture(snow, uv * 10).rgb;
+
+	vec3 dirtColor	= lerp(dirtColorClose, dirtColorFar, uvLerp);
+	vec3 sandColor	= lerp(sandColorClose, sandColorFar, uvLerp);
+	vec3 grassColor	= lerp(grassColorClose, grassColorFar, uvLerp);
+	vec3 rockColor	= lerp(rockColorClose, rockColorFar, uvLerp);
+	vec3 snowColor	= lerp(snowColorClose, snowColorFar, uvLerp);
 
 	vec3 diffuse;
 	diffuse = lerp(dirtColor, sandColor, ds);
