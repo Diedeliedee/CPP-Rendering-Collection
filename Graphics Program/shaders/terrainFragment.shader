@@ -2,7 +2,6 @@
 out vec4 FragColor;
 
 in vec2	uv;
-in vec3	normal;
 in vec3	worldPosition;
 
 uniform sampler2D diffuseTex;
@@ -14,8 +13,8 @@ uniform vec3 cameraPosition;
 void main()
 {
 	//	Normal calculation.
-	//vec3 normal	= texture(normalTex, uv).rgb;
-	//normal		= normalize(normal * 2.0 - 1.0);
+	vec3 normal	= texture(normalTex, uv).rgb;
+	normal		= normalize(normal * 2.0 - 1.0);
 
 	//	Specular data
 	//vec3 viewDir		= normalize(worldPosition - cameraPosition);
@@ -27,7 +26,7 @@ void main()
 
 	//	Separate RGB and alpha.
 	vec4 _output	= texture(diffuseTex, uv);
-	_output.rgb		= _output.rgb * min(lightValue + 0.1, 1.0); // + specular * _output.rgb;
+	_output.rgb		= vec3(min(lightValue + 0.1, 1.0));//_output.rgb * min(lightValue + 0.1, 1.0); // + specular * _output.rgb;
 
 	FragColor = _output;
 }

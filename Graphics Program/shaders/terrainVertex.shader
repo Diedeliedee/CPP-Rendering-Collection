@@ -4,7 +4,6 @@ layout(location = 1) in vec3 vNormal;
 layout(location = 2) in vec2 vUV;
 
 out vec2 uv;
-out vec3 normal;
 out vec3 worldPosition;
 
 uniform mat4 world, view, projection;
@@ -23,7 +22,6 @@ void main()
 
 	gl_Position	= projection * view * worldPos;
 	uv			= vUV;
-	normal		= vNormal;
 
 	worldPosition = mat3(world) * aPos;
 }

@@ -55,7 +55,7 @@ float camYaw, camPitch;
 glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
 
 //	Terrain data:
-GLuint terrainVAO, terrainIndexCount, heightmapID;
+GLuint terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
 unsigned char* heightmapTexture;
 
 int main()
@@ -73,15 +73,8 @@ int main()
 	createShaders();
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
-	terrainVAO = GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
-
-	GLuint boxTex		= loadTexture("textures/container2.png");
-	GLuint boxNormal	= loadTexture("textures/container2_normal.png");
-
-	//	Set texture channels.
-	glUseProgram(simpleProgram);
-	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"), 0);
-	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
+	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 100.0f, 5.0f, terrainIndexCount, heightmapID);
+	heightNormalID	= loadTexture("textures/heightnormal.png");
 
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
@@ -159,6 +152,8 @@ void renderTerrain()
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, heightmapID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, heightNormalID);
 
 	//	Rendering
 	glBindVertexArray(terrainVAO);
@@ -497,8 +492,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void createShaders()
 {
 	createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
+	
+	//	Set texture channels.
+	glUseProgram(simpleProgram);
+	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
+
 	createProgram(skyProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
 	createProgram(terrainProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
+
+	glUseProgram(terrainProgram);
+	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"), 0);
+	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
