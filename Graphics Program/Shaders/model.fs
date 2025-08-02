@@ -29,6 +29,11 @@ float lerp(float a, float b, float t)
     return a + (b - a) * t;
 }
 
+void clip(float x)
+{
+    if (x < 0) discard;
+}
+
 void main()
 {
     //  Sampling diffuse and specular textures.
@@ -61,7 +66,9 @@ void main()
 
     //  Constructing output.
     vec4 _output = lerp(diffuse * max(light * ambientOcclusion, 0.2 * ambientOcclusion) + vec4(specular, 0), vec4(fogColor, 1.0), fog);
-    //_output.a = 0.5;//diffuse.r;
+    
+     // Treshold clipping.
+     if (_output.a < 0.5) discard;
 
     //  Output result.
     FragColor = _output;
