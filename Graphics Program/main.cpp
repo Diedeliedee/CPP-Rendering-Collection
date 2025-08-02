@@ -81,6 +81,9 @@ int main()
 	//	Setting framerate cap.
 	glfwSwapInterval(1);
 
+	//	Flip texture UV's
+	stbi_set_flip_vertically_on_load(true);
+
 	//	Load resources.
 	createShaders();
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
