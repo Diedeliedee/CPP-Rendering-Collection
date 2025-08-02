@@ -87,5 +87,11 @@
     <None Include="shaders\terrainFragment.shader">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="Shaders\model.fs">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="Shaders\model.vs">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

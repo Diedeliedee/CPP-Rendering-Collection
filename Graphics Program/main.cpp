@@ -23,7 +23,10 @@ void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path, int comp = 0);
 void renderSkybox();
 void renderTerrain();
+void renderModel(Model* model);
+
 unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
+
 
 //	Window callbacks:
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -35,7 +38,7 @@ bool keys[1024];
 void loadFile(const char* filename, char*& output);
 
 //	Program ID's
-GLuint simpleProgram, skyProgram, terrainProgram;
+GLuint simpleProgram, skyProgram, terrainProgram, modelProgram;
 
 //	Properties
 const int width = 1280, height = 720;
@@ -61,6 +64,8 @@ GLuint terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
 unsigned char* heightmapTexture;
 
 GLuint dirt, sand, grass, rock, snow;
+
+Model* backpack;
 
 int main()
 {
@@ -89,6 +94,8 @@ int main()
 	rock	= loadTexture("textures/rock.jpg");
 	snow	= loadTexture("textures/snow.jpg");
 
+	backpack = new Model("models/backpack/backpack.obj");
+
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
 
@@ -108,6 +115,7 @@ int main()
 
 		renderSkybox();
 		renderTerrain();
+		renderModel(backpack);
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -161,8 +169,8 @@ void renderTerrain()
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 
-	float t = glfwGetTime();
-	lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
+	//float t = glfwGetTime();
+	//lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
 	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
 	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
 
@@ -518,25 +526,34 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 void createShaders()
 {
+	//	Creating program for simple cube.
 	createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
-	
-	//	Set texture channels.
 	glUseProgram(simpleProgram);
-	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"), 0);
-	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
+	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"),	0);
+	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"),	1);
 
+	//	Creating program for skybox
 	createProgram(skyProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
+
+	//	Creating program for terrain.
 	createProgram(terrainProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
-
 	glUseProgram(terrainProgram);
-	glUniform1i(glGetUniformLocation(terrainProgram, "diffuseTex"), 0);
-	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"), 1);
+	glUniform1i(glGetUniformLocation(terrainProgram, "diffuseTex"),	0);
+	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"),	1);
+	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"),		2);
+	glUniform1i(glGetUniformLocation(terrainProgram, "sand"),		3);
+	glUniform1i(glGetUniformLocation(terrainProgram, "grass"),		4);
+	glUniform1i(glGetUniformLocation(terrainProgram, "rock"),		5);
+	glUniform1i(glGetUniformLocation(terrainProgram, "snow"),		6);
 
-	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"), 2);
-	glUniform1i(glGetUniformLocation(terrainProgram, "sand"), 3);
-	glUniform1i(glGetUniformLocation(terrainProgram, "grass"), 4);
-	glUniform1i(glGetUniformLocation(terrainProgram, "rock"), 5);
-	glUniform1i(glGetUniformLocation(terrainProgram, "snow"), 6);
+	//	Creating program for loaded model.
+	createProgram(modelProgram, "shaders/model.vs", "shaders/model.fs");
+	glUseProgram(modelProgram);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_diffuse1"),		0);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_specular1"),	1);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_norma1l"),		2);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_roughness1"),	3);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_ao1"),			4);
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
@@ -664,4 +681,28 @@ GLuint loadTexture(const char* path, int comp)
 
 	//	Return it.
 	return textureID;
+}
+
+void renderModel(Model* model) 
+{
+	//	Configuring GPU options I think??
+	glEnable(GL_DEPTH);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glUseProgram(modelProgram);
+
+	//	Passing scale into the render program.
+	glm::mat4 world = glm::mat4(1.0f);
+	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "world"),			1, GL_FALSE, glm::value_ptr(world));
+	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"),			1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"),	1, GL_FALSE, glm::value_ptr(projection));
+
+	//	Passing world light information into the render program.
+	glUniform3fv(glGetUniformLocation(modelProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+	glUniform3fv(glGetUniformLocation(modelProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+	//	Calling the model's render program.
+	model->Draw(modelProgram);
 }

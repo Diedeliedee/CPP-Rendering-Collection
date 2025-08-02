@@ -84,6 +84,17 @@
     <IncludePath>..\..\Dependencies\include;$(IncludePath)</IncludePath>
     <LibraryPath>..\..\Dependencies\lib\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgInstalledDir>
+    </VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgInstalledDir>
+    </VcpkgInstalledDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>false</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -167,6 +178,8 @@
     <Image Include="textures\snow.jpg" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\model.fs" />
+    <None Include="Shaders\model.vs" />
     <None Include="shaders\simpleFragment.shader" />
     <None Include="shaders\simpleVertex.shader" />
     <None Include="shaders\skyFragment.shader" />
