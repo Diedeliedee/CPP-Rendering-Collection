@@ -120,7 +120,7 @@ int main()
 		renderTerrain();
 
 		float t = glfwGetTime();
-		renderModel(backpack, glm::vec3(100, 100, 100), glm::vec3(0, t, 0), glm::vec3(10, 10, 10));
+		renderModel(backpack, glm::vec3(100, 100, 100), glm::vec3(0, t, 0), glm::vec3(100, 100, 100));
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
