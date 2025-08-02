@@ -23,7 +23,7 @@ void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path, int comp = 0);
 void renderSkybox();
 void renderTerrain();
-void renderModel(Model* model);
+void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale);
 
 unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
 
@@ -118,7 +118,9 @@ int main()
 
 		renderSkybox();
 		renderTerrain();
-		renderModel(backpack);
+
+		float t = glfwGetTime();
+		renderModel(backpack, glm::vec3(100, 100, 100), glm::vec3(0, t, 0), glm::vec3(10, 10, 10));
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -686,7 +688,7 @@ GLuint loadTexture(const char* path, int comp)
 	return textureID;
 }
 
-void renderModel(Model* model) 
+void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) 
 {
 	//	Configuring GPU options I think??
 	glEnable(GL_DEPTH);
@@ -696,8 +698,13 @@ void renderModel(Model* model)
 
 	glUseProgram(modelProgram);
 
-	//	Passing scale into the render program.
+	//	Passing translation data into the program.
 	glm::mat4 world = glm::mat4(1.0f);
+
+	world = glm::translate(world, pos);
+	world = world * glm::toMat4(glm::quat(rot));
+	world = glm::scale(world, scale);
+
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "world"),			1, GL_FALSE, glm::value_ptr(world));
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"),			1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"),	1, GL_FALSE, glm::value_ptr(projection));

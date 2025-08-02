@@ -12,6 +12,7 @@ uniform sampler2D texture_roughness1;
 uniform sampler2D texture_ao1;
 
 uniform vec3 cameraPosition;
+uniform vec3 lightDirection;
 
 float lerp(float a, float b, float t) {
     return a + (b - a) * t;
@@ -19,15 +20,13 @@ float lerp(float a, float b, float t) {
 
 void main()
 {
-    vec3 lightDir = normalize(vec3(-1, -0.5, -1));
-    
     vec4 diffuse = texture(texture_diffuse1, TexCoords);
     vec4 specTex = texture(texture_specular1, TexCoords);
 
-    float light = max(dot(-lightDir, Normals), 0.0);
+    float light = max(dot(-lightDirection, Normals), 0.0);
 
     vec3 viewDir = normalize(cameraPosition - FragPos.rgb);
-    vec3 refl = reflect(lightDir, Normals);
+    vec3 refl = reflect(lightDirection, Normals);
 
     float ambientOcclusion = texture(texture_ao1, TexCoords).r;
     
