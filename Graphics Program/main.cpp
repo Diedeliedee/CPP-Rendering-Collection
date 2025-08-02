@@ -9,6 +9,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "model.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
