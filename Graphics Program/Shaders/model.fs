@@ -59,6 +59,10 @@ void main()
     
     vec3 fogColor = lerp(botColor, topColor, max(viewDir.y, 0.0));
 
+    //  Constructing output.
+    vec4 _output = lerp(diffuse * max(light * ambientOcclusion, 0.2 * ambientOcclusion) + vec4(specular, 0), vec4(fogColor, 1.0), fog);
+    //_output.a = 0.5;//diffuse.r;
+
     //  Output result.
-    FragColor = lerp(diffuse * max(light * ambientOcclusion, 0.2 * ambientOcclusion) + vec4(specular, 0), vec4(fogColor, 1.0), fog);
+    FragColor = _output;
 }

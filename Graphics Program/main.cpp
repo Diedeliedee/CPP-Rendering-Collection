@@ -120,7 +120,7 @@ int main()
 		renderTerrain();
 
 		float t = glfwGetTime();
-		renderModel(backpack, glm::vec3(100, 100, 100), glm::vec3(0, t, 0), glm::vec3(100, 100, 100));
+		renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, t, 0), glm::vec3(100, 100, 100));
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -690,6 +690,20 @@ GLuint loadTexture(const char* path, int comp)
 
 void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) 
 {
+	//	Enabling blending.
+	glEnable(GL_BLEND);
+
+	//	Alpha blend.
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//	Additive blend.
+	//glBlendFunc(GL_ONE, GL_ONE);
+	//	Soft additive blend.
+	//glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
+	//  Multiply blend.
+	//glBlendFunc(GL_DST_COLOR, GL_ZERO);
+	//  Double multiply blend.
+	glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+
 	//	Configuring GPU options I think??
 	glEnable(GL_DEPTH);
 	glEnable(GL_DEPTH_TEST);
@@ -715,4 +729,7 @@ void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale)
 
 	//	Calling the model's render program.
 	model->Draw(modelProgram);
+
+	//	Disabling blending.
+	glDisable(GL_BLEND);
 }
