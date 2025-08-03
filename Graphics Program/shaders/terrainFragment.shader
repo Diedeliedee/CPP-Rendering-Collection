@@ -69,7 +69,12 @@ void main()
 	diffuse = lerp(diffuse, rockColor, gr);
 	diffuse = lerp(diffuse, snowColor, rs);
 
-	float fog = pow(clamp((dist - 250) / 1000, 0, 1), 2);
+	//	Calculating fog.
+	float fog		= 1;
+	float density	= 0.001;
+
+	fog = 1 / pow(2, pow(dist * density, 2));	//	Calculate fragment fog.
+	fog = 1 - fog;								//	Inverting.
 
 	vec3 topColor = vec3(68.0 / 255.0, 118.0 / 255.0, 189.0 / 255.0);
 	vec3 botColor = vec3(188.0 / 255.0, 214.0 / 255.0, 231.0 / 255.0);

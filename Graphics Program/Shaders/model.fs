@@ -56,8 +56,12 @@ void main()
     vec3 specular   = spec * specTex.rgb;
 
     //  Applying fog.
-    float dist  = length(FragPos.xyz - cameraPosition);
-    float fog   = pow(clamp((dist - 250) / 1000, 0, 1), 2);
+    float dist      = length(FragPos.xyz - cameraPosition);
+    float fog       = 1;
+    float density   = 0.001;
+
+    fog = 1 / pow(2, pow(dist * density, 2));   //	Calculate fragment fog.
+    fog = 1 - fog;                              //	Inverting.
 
     vec3 topColor = vec3(68.0 / 255.0, 118.0 / 255.0, 189.0 / 255.0);
     vec3 botColor = vec3(188.0 / 255.0, 214.0 / 255.0, 231.0 / 255.0);
@@ -68,7 +72,7 @@ void main()
     vec4 _output = lerp(diffuse * max(light * ambientOcclusion, 0.2 * ambientOcclusion) + vec4(specular, 0), vec4(fogColor, 1.0), fog);
     
      // Treshold clipping.
-     if (_output.a < 0.5) discard;
+     //if (_output.a < 0.5) discard;
 
     //  Output result.
     FragColor = _output;

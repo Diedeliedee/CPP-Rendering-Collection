@@ -14,36 +14,45 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-//	Forward declaration:
+#pragma region Forward Declaration
+
+//	Main:
 int init(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
-void processInput(GLFWwindow* window);
+
+//	Generating:
 void createGeometry(GLuint& VAO, GLuint& VBO, int& size, int& indices);
-void createShaders();
-void createProgram(GLuint& programID, const char* vertex, const char* fragment);
-GLuint loadTexture(const char* path, int comp = 0);
+unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
+
+//	Rendering:
 void renderSkybox();
 void renderTerrain();
 void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale);
 
-unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
-
-
-//	Window callbacks:
+//	Input:
+void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-bool keys[1024];
-
 //	Util:
 void loadFile(const char* filename, char*& output);
+GLuint loadTexture(const char* path, int comp = 0);
+void createProgram(GLuint& programID, const char* vertex, const char* fragment);
+void createShaders();
 
-//	Program ID's
-GLuint simpleProgram, skyProgram, terrainProgram, modelProgram;
+#pragma endregion
 
-//	Properties
+#pragma region Member Variables
+
+//	Window:
 const int width = 1280, height = 720;
 
-//	World data
+//	Program ID's:
+GLuint simpleProgram, skyProgram, terrainProgram, modelProgram;
+
+//	Input:
+bool keys[1024];
+
+//	World Data:
 glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
 glm::vec3 cameraPosition = glm::vec3(0, 100, 0);
 
@@ -51,21 +60,22 @@ glm::vec3 cameraPosition = glm::vec3(0, 100, 0);
 GLuint boxVAO, boxEBO;
 int boxSize, boxIndexCount;
 
-//	Matrices!
+//	Camera variables:
 glm::mat4 view, projection;
-
 float lastX, lastY;
 bool firstMouse = true;
 float camYaw, camPitch;
 glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
 
-//	Terrain data:
+//	Terrain Data:
 GLuint terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
 unsigned char* heightmapTexture;
-
 GLuint dirt, sand, grass, rock, snow;
 
+//	Model Data:
 Model* backpack;
+
+#pragma endregion
 
 int main()
 {
@@ -86,9 +96,12 @@ int main()
 
 	//	Load resources.
 	createShaders();
+
+	//	Creating stuff for the skybox.
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
-	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 250.0f, 8.0f, terrainIndexCount, heightmapID);
+	//	Creating stuff for the terrain!
+	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 250.0f, 5.0f, terrainIndexCount, heightmapID);
 	heightNormalID	= loadTexture("textures/heightnormal.png");
 
 	dirt	= loadTexture("textures/dirt.jpg");
@@ -97,6 +110,7 @@ int main()
 	rock	= loadTexture("textures/rock.jpg");
 	snow	= loadTexture("textures/snow.jpg");
 
+	//	Creating stuff for models.
 	backpack = new Model("models/backpack/backpack.obj");
 
 	//	Create a viewport.
@@ -104,7 +118,7 @@ int main()
 
 	//	Assign matrices.
 	view		= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	projection	= glm::perspective(glm::radians(75.0f), width / (float)height, 0.1f, 10000.0f);
+	projection	= glm::perspective(glm::radians(75.0f), width / (float)height, 0.1f, 5000.0f);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
@@ -112,15 +126,17 @@ int main()
 		//	Input.
 		processInput(window);
 
-		//	Rendering.
+		//	Clearing previous draw.
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//	Rendering environment
 		renderSkybox();
 		renderTerrain();
 
-		float t = glfwGetTime();
-		renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, t, 0), glm::vec3(100, 100, 100));
+		//	Rendering models.
+		//float t = glfwGetTime();
+		renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -132,74 +148,156 @@ int main()
 	return 0;
 }
 
-void renderSkybox()
+#pragma region Setup
+
+/// <summary>
+/// Initializes GLFW window.
+/// </summary>
+/// <param name="window">Reference to the created window</param>
+/// <returns>Callback integer stating the result of initialization.</returns>
+int init(GLFWwindow*& window)
 {
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_DEPTH);
+	//	Initialize GLFW.
+	if (!glfwInit())
+	{
+		std::cout << "ERROR: GLFW initialization failed." << std::endl;
+	}
 
-	glUseProgram(skyProgram);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	glm::mat4 world	= glm::mat4(1.0f);
-	world			= glm::translate(world, cameraPosition);
-	world			= glm::scale(world, glm::vec3(100, 100, 100));
+	//	Create a GLFW window.
+	window = glfwCreateWindow(width, height, "Graphics Program", NULL, NULL);
+	if (window == NULL)
+	{
+		std::cout << "ERROR: Failed to create GLFW window." << std::endl;
+		glfwTerminate();
+		return -1;
+	}
 
-	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	//	Register callbacks.
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetKeyCallback(window, key_callback);
 
-	glUniform3fv(glGetUniformLocation(skyProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
-	glUniform3fv(glGetUniformLocation(skyProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+	glfwMakeContextCurrent(window);
 
-	glBindVertexArray(boxVAO);
-	glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
+	//	Load GLAD.
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		std::cout << "ERROR: Failed to load Glad." << std::endl;
+		return -1;
+	}
 
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH);
+	return 0;
 }
 
-void renderTerrain()
+/// <summary>
+/// Create a new program! (Comparable to Unity shader instance i.e material.)
+/// </summary>
+/// <param name="programID">Unique identifier for the program.</param>
+/// <param name="vertex">Paths to the vertex shader.</param>
+/// <param name="fragment">Path to the fragment shader.</param>
+void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
 {
-	glEnable(GL_DEPTH);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	char* vertexSrc;
+	char* fragmentSrc;
 
+	int succes;
+	char infolog[512];
+
+	loadFile(vertex, vertexSrc);
+	loadFile(fragment, fragmentSrc);
+
+	GLuint vertexShaderID, fragmentShaderID;
+
+	//	Creating vertex shader.
+	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShaderID, 1, &vertexSrc, nullptr);
+	glCompileShader(vertexShaderID);
+
+	//	Vertex shader error handling.
+	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &succes);
+	if (!succes)
+	{
+		glGetShaderInfoLog(vertexShaderID, 512, nullptr, infolog);
+		std::cout << "ERROR COMPILING VERTEX SHADER\n" << infolog << std::endl;
+	}
+
+	//	Creating fragment shader.
+	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShaderID, 1, &fragmentSrc, nullptr);
+	glCompileShader(fragmentShaderID);
+
+	//	Fragment shader error handling.
+	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &succes);
+	if (!succes)
+	{
+		glGetShaderInfoLog(fragmentShaderID, 512, nullptr, infolog);
+		std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << infolog << std::endl;;
+	}
+
+	programID = glCreateProgram();
+	glAttachShader(programID, vertexShaderID);
+	glAttachShader(programID, fragmentShaderID);
+	glLinkProgram(programID);
+
+	glGetProgramiv(programID, GL_LINK_STATUS, &succes);
+	if (!succes)
+	{
+		glGetProgramInfoLog(programID, 512, nullptr, infolog);
+		std::cout << "ERROR LINKING PROGRAM\n" << infolog << std::endl;;
+	}
+
+	glDeleteShader(vertexShaderID);
+	glDeleteShader(fragmentShaderID);
+
+	delete vertexSrc;
+	delete fragmentSrc;
+}
+
+/// <summary>
+/// Function to initialize al the programs! Creates shader instances, and configures their variables to certain destinations.
+/// </summary>
+void createShaders()
+{
+	//	Creating program for simple cube.
+	createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
+	glUseProgram(simpleProgram);
+	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"),	0);
+	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"),	1);
+
+	//	Creating program for skybox
+	createProgram(skyProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
+
+	//	Creating program for terrain.
+	createProgram(terrainProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
 	glUseProgram(terrainProgram);
+	glUniform1i(glGetUniformLocation(terrainProgram, "diffuseTex"),	0);
+	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"),	1);
+	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"),		2);
+	glUniform1i(glGetUniformLocation(terrainProgram, "sand"),		3);
+	glUniform1i(glGetUniformLocation(terrainProgram, "grass"),		4);
+	glUniform1i(glGetUniformLocation(terrainProgram, "rock"),		5);
+	glUniform1i(glGetUniformLocation(terrainProgram, "snow"),		6);
 
-	glm::mat4 world	= glm::mat4(1.0f);
-
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-
-	//float t = glfwGetTime();
-	//lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
-	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
-	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, heightmapID);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, heightNormalID);
-
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, dirt);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, sand);
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, grass);
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_2D, rock);
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_2D, snow);
-
-	//	Rendering
-	glBindVertexArray(terrainVAO);
-	glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
+	//	Creating program for loaded model.
+	createProgram(modelProgram, "shaders/model.vs", "shaders/model.fs");
+	glUseProgram(modelProgram);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_diffuse1"),		0);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_specular1"),	1);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_norma1l"),		2);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_roughness1"),	3);
+	glUniform1i(glGetUniformLocation(modelProgram, "texture_ao1"),			4);
 }
 
+#pragma endregion
+
+#pragma region Generating Geometry
+
+/// <summary>
+/// Function that creates a plane
+/// </summary>
 unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
 {
 	int width, height, channels;
@@ -308,82 +406,9 @@ unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum f
 	return VAO;
 }
 
-void processInput(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(window, true);
-	}
-
-	bool camChanged = false;
-
-	if (keys[GLFW_KEY_W])
-	{
-		cameraPosition += camQuat * glm::vec3(0, 0, 10);
-		camChanged = true;
-	}
-	if (keys[GLFW_KEY_S])
-	{
-		cameraPosition += camQuat * glm::vec3(0, 0, -10);
-		camChanged = true;
-	}
-	if (keys[GLFW_KEY_A])
-	{
-		cameraPosition += camQuat * glm::vec3(10, 0, 0);
-		camChanged = true;
-	}
-	if (keys[GLFW_KEY_D])
-	{
-		cameraPosition += camQuat * glm::vec3(-10, 0, 0);
-		camChanged = true;
-	}
-
-	if (camChanged)
-	{
-		glm::vec3 camForward	= camQuat * glm::vec3(0, 0, 1);
-		glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
-
-		view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
-	}
-}
-
-int init(GLFWwindow*& window)
-{
-	//	Initialize GLFW.
-	if (!glfwInit())
-	{
-		std::cout << "ERROR: GLFW initialization failed." << std::endl;
-	}
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	//	Create a GLFW window.
-	window = glfwCreateWindow(width, height, "Graphics Program", NULL, NULL);
-	if (window == NULL)
-	{
-		std::cout << "ERROR: Failed to create GLFW window." << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-
-	//	Register callbacks.
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetKeyCallback(window, key_callback);
-
-	glfwMakeContextCurrent(window);
-
-	//	Load GLAD.
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-		std::cout << "ERROR: Failed to load Glad." << std::endl;
-		return -1;
-	}
-
-	return 0;
-}
-
+/// <summary>
+/// Function that creates a box.
+/// </summary>
 void createGeometry(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 {
 	// need 24 vertices for normal/uv-mapped Cube
@@ -488,6 +513,184 @@ void createGeometry(GLuint& VAO, GLuint& EBO, int& size, int& numIndices)
 
 }
 
+#pragma endregion
+
+#pragma region Rendering
+
+void renderSkybox()
+{
+	//	Configuring options.
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH);
+
+	//	Setting current program.
+	glUseProgram(skyProgram);
+
+	//	Creating world matrix.
+	glm::mat4 world	= glm::mat4(1.0f);
+	world			= glm::translate(world, cameraPosition);
+	world			= glm::scale(world, glm::vec3(100, 100, 100));
+
+	//	Injecting projection data.
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(skyProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	//	Injecting relevant vectors.
+	glUniform3fv(glGetUniformLocation(skyProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+	glUniform3fv(glGetUniformLocation(skyProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+	//	Drawing!
+	glBindVertexArray(boxVAO);
+	glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
+
+	//	Re-enabling some stuff.
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH);
+}
+
+void renderTerrain()
+{
+	//	Configuring options.
+	glEnable(GL_DEPTH);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	//	Setting current program.
+	glUseProgram(terrainProgram);
+
+	//	Creating world matrix.
+	glm::mat4 world	= glm::mat4(1.0f);
+
+	//	Injecting projection data.
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	//	Injecting relevant vectors.
+	// float t = glfwGetTime();
+	// lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
+	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+	//	Injecting height textures.
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, heightmapID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, heightNormalID);
+
+	//	Injecting ground textures.
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, dirt);
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, sand);
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, grass);
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, rock);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, snow);
+
+	//	Drawing!
+	glBindVertexArray(terrainVAO);
+	glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
+}
+
+void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) 
+{
+	//	Enabling blending.
+	//glEnable(GL_BLEND);
+
+	//	Alpha blend.
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//	Additive blend.
+	//glBlendFunc(GL_ONE, GL_ONE);
+	//	Soft additive blend.
+	//glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
+	//  Multiply blend.
+	//glBlendFunc(GL_DST_COLOR, GL_ZERO);
+	//  Double multiply blend.
+	//glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
+
+	//	Configuring GPU options I think??
+	glEnable(GL_DEPTH);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	glUseProgram(modelProgram);
+
+	//	Passing translation data into the program.
+	glm::mat4 world = glm::mat4(1.0f);
+
+	world = glm::translate(world, pos);
+	world = world * glm::toMat4(glm::quat(rot));
+	world = glm::scale(world, scale);
+
+	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "world"),			1, GL_FALSE, glm::value_ptr(world));
+	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"),			1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"),	1, GL_FALSE, glm::value_ptr(projection));
+
+	//	Passing world light information into the render program.
+	glUniform3fv(glGetUniformLocation(modelProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+	glUniform3fv(glGetUniformLocation(modelProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+
+	//	Calling the model's render program.
+	model->Draw(modelProgram);
+
+	//	Disabling blending.
+	glDisable(GL_BLEND);
+}
+
+#pragma endregion
+
+#pragma region Input
+
+void processInput(GLFWwindow* window)
+{
+	//	Close window if escape is pressed.
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	{
+		glfwSetWindowShouldClose(window, true);
+	}
+
+	//	Define false cam changed.
+	bool camChanged = false;
+
+	//	Move the camera if a key is pressed!
+	if (keys[GLFW_KEY_W])
+	{
+		cameraPosition += camQuat * glm::vec3(0, 0, 10);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_S])
+	{
+		cameraPosition += camQuat * glm::vec3(0, 0, -10);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_A])
+	{
+		cameraPosition += camQuat * glm::vec3(10, 0, 0);
+		camChanged = true;
+	}
+	if (keys[GLFW_KEY_D])
+	{
+		cameraPosition += camQuat * glm::vec3(-10, 0, 0);
+		camChanged = true;
+	}
+
+	//	If the camera has moved, recalculate the view matrix.
+	if (camChanged)
+	{
+		glm::vec3 camForward	= camQuat * glm::vec3(0, 0, 1);
+		glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
+
+		view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
+	}
+}
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	float x = (float)xpos;
@@ -517,6 +720,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 	view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
 }
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS)
@@ -529,96 +733,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 }
 
-void createShaders()
-{
-	//	Creating program for simple cube.
-	createProgram(simpleProgram, "shaders/simpleVertex.shader", "shaders/simpleFragment.shader");
-	glUseProgram(simpleProgram);
-	glUniform1i(glGetUniformLocation(simpleProgram, "diffuseTex"),	0);
-	glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"),	1);
+#pragma endregion
 
-	//	Creating program for skybox
-	createProgram(skyProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
+#pragma region Utilities
 
-	//	Creating program for terrain.
-	createProgram(terrainProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
-	glUseProgram(terrainProgram);
-	glUniform1i(glGetUniformLocation(terrainProgram, "diffuseTex"),	0);
-	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"),	1);
-	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"),		2);
-	glUniform1i(glGetUniformLocation(terrainProgram, "sand"),		3);
-	glUniform1i(glGetUniformLocation(terrainProgram, "grass"),		4);
-	glUniform1i(glGetUniformLocation(terrainProgram, "rock"),		5);
-	glUniform1i(glGetUniformLocation(terrainProgram, "snow"),		6);
-
-	//	Creating program for loaded model.
-	createProgram(modelProgram, "shaders/model.vs", "shaders/model.fs");
-	glUseProgram(modelProgram);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_diffuse1"),		0);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_specular1"),	1);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_norma1l"),		2);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_roughness1"),	3);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_ao1"),			4);
-}
-
-void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
-{
-	char* vertexSrc;
-	char* fragmentSrc;
-
-	int succes;
-	char infolog[512];
-
-	loadFile(vertex, vertexSrc);
-	loadFile(fragment, fragmentSrc);
-
-	GLuint vertexShaderID, fragmentShaderID;
-
-	//	Creating vertex shader.
-	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShaderID, 1, &vertexSrc, nullptr);
-	glCompileShader(vertexShaderID);
-
-	//	Vertex shader error handling.
-	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &succes);
-	if (!succes)
-	{
-		glGetShaderInfoLog(vertexShaderID, 512, nullptr, infolog);
-		std::cout << "ERROR COMPILING VERTEX SHADER\n" << infolog << std::endl;
-	}
-
-	//	Creating fragment shader.
-	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShaderID, 1, &fragmentSrc, nullptr);
-	glCompileShader(fragmentShaderID);
-
-	//	Fragment shader error handling.
-	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &succes);
-	if (!succes)
-	{
-		glGetShaderInfoLog(fragmentShaderID, 512, nullptr, infolog);
-		std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << infolog << std::endl;;
-	}
-
-	programID = glCreateProgram();
-	glAttachShader(programID, vertexShaderID);
-	glAttachShader(programID, fragmentShaderID);
-	glLinkProgram(programID);
-
-	glGetProgramiv(programID, GL_LINK_STATUS, &succes);
-	if (!succes)
-	{
-		glGetProgramInfoLog(programID, 512, nullptr, infolog);
-		std::cout << "ERROR LINKING PROGRAM\n" << infolog << std::endl;;
-	}
-
-	glDeleteShader(vertexShaderID);
-	glDeleteShader(fragmentShaderID);
-
-	delete vertexSrc;
-	delete fragmentSrc;
-}
-
+/// <summary>
+/// Function to load a file from the computer's directory.
+/// </summary>
+/// <param name="filename">The path to pull the data from.</param>
+/// <param name="output">Character array defining the pulled date.</param>
 void loadFile(const char* filename, char*& output) 
 {
 	//	Open the file.
@@ -650,6 +773,12 @@ void loadFile(const char* filename, char*& output)
 	}
 }
 
+/// <summary>
+/// Function to load a texture from the computers directory.
+/// </summary>
+/// <param name="path">The path to pull the texture from.</param>
+/// <param name="comp">Override for how many componenst the texture has. (Channels)</param>
+/// <returns>The texture!!</returns>
 GLuint loadTexture(const char* path, int comp)
 {
 	//	Generate and bind a texture. (Whatever that means ;_:)
@@ -688,48 +817,4 @@ GLuint loadTexture(const char* path, int comp)
 	return textureID;
 }
 
-void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) 
-{
-	//	Enabling blending.
-	glEnable(GL_BLEND);
-
-	//	Alpha blend.
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//	Additive blend.
-	//glBlendFunc(GL_ONE, GL_ONE);
-	//	Soft additive blend.
-	//glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
-	//  Multiply blend.
-	//glBlendFunc(GL_DST_COLOR, GL_ZERO);
-	//  Double multiply blend.
-	glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-
-	//	Configuring GPU options I think??
-	glEnable(GL_DEPTH);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glUseProgram(modelProgram);
-
-	//	Passing translation data into the program.
-	glm::mat4 world = glm::mat4(1.0f);
-
-	world = glm::translate(world, pos);
-	world = world * glm::toMat4(glm::quat(rot));
-	world = glm::scale(world, scale);
-
-	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "world"),			1, GL_FALSE, glm::value_ptr(world));
-	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"),			1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"),	1, GL_FALSE, glm::value_ptr(projection));
-
-	//	Passing world light information into the render program.
-	glUniform3fv(glGetUniformLocation(modelProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
-	glUniform3fv(glGetUniformLocation(modelProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
-
-	//	Calling the model's render program.
-	model->Draw(modelProgram);
-
-	//	Disabling blending.
-	glDisable(GL_BLEND);
-}
+#pragma endregion
