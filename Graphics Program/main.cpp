@@ -73,7 +73,8 @@ unsigned char* heightmapTexture;
 GLuint dirt, sand, grass, rock, snow;
 
 //	Model Data:
-Model* backpack;
+Model* train;
+Model* barrel;
 
 #pragma endregion
 
@@ -92,7 +93,7 @@ int main()
 	glfwSwapInterval(1);
 
 	//	Flip texture UV's
-	stbi_set_flip_vertically_on_load(true);
+	//stbi_set_flip_vertically_on_load(true);
 
 	//	Load resources.
 	createShaders();
@@ -101,8 +102,8 @@ int main()
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
 	//	Creating stuff for the terrain!
-	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 250.0f, 5.0f, terrainIndexCount, heightmapID);
-	heightNormalID	= loadTexture("textures/heightnormal.png");
+	terrainVAO		= GeneratePlane("textures/heightmap_2.png", heightmapTexture, GL_RGBA, 4, 250.0f, 1.0f, terrainIndexCount, heightmapID);
+	heightNormalID	= loadTexture("textures/heightnormal_2_but_bad.png");
 
 	dirt	= loadTexture("textures/dirt.jpg");
 	sand	= loadTexture("textures/sand.jpg");
@@ -111,7 +112,8 @@ int main()
 	snow	= loadTexture("textures/snow.jpg");
 
 	//	Creating stuff for models.
-	backpack = new Model("models/backpack/backpack.obj");
+	train		= new Model("models/train/train.obj");
+	barrel		= new Model("models/barrel/barrel.obj");
 
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
@@ -130,13 +132,17 @@ int main()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//	Rotating sun.
+		float t			= glfwGetTime();
+		lightDirection	= glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
+
 		//	Rendering environment
 		renderSkybox();
 		renderTerrain();
 
 		//	Rendering models.
-		//float t = glfwGetTime();
-		renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
+		renderModel(train,	glm::vec3(1000, 500, 1000), glm::vec3(-1.57079632679, 0, 0), glm::vec3(1, 1, 1));
+		renderModel(barrel,	glm::vec3(1000, 500, 2000), glm::vec3(-1.57079632679, 0, 0), glm::vec3(100, 100, 100));
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -570,8 +576,6 @@ void renderTerrain()
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 	//	Injecting relevant vectors.
-	// float t = glfwGetTime();
-	// lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
 	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
 	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
 
@@ -641,7 +645,7 @@ void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale)
 	model->Draw(modelProgram);
 
 	//	Disabling blending.
-	glDisable(GL_BLEND);
+	//glDisable(GL_BLEND);
 }
 
 #pragma endregion
