@@ -38,6 +38,12 @@
     <ClInclude Include="model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="portal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="textures\container2.png">
@@ -91,6 +97,12 @@
       <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="Shaders\model.vs">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="Shaders\portalFragment.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="Shaders\portalVertex.shader">
       <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>

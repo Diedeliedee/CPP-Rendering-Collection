@@ -9,10 +9,14 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+#include "util.h"
 #include "model.h"
+#include "portal.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+using namespace util;
 
 #pragma region Forward Declaration
 
@@ -34,9 +38,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 //	Util:
-void loadFile(const char* filename, char*& output);
-GLuint loadTexture(const char* path, int comp = 0);
-void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 void createShaders();
 
 #pragma endregion
@@ -73,7 +74,10 @@ unsigned char* heightmapTexture;
 GLuint dirt, sand, grass, rock, snow;
 
 //	Model Data:
-Model* backpack;
+//Model* backpack;
+
+//	Portal:
+Portal* portal;
 
 #pragma endregion
 
@@ -92,7 +96,7 @@ int main()
 	glfwSwapInterval(1);
 
 	//	Flip texture UV's
-	stbi_set_flip_vertically_on_load(true);
+	//stbi_set_flip_vertically_on_load(true);
 
 	//	Load resources.
 	createShaders();
@@ -111,7 +115,10 @@ int main()
 	snow	= loadTexture("textures/snow.jpg");
 
 	//	Creating stuff for models.
-	backpack = new Model("models/backpack/backpack.obj");
+	//backpack	= new Model("models/backpack/backpack.obj");
+
+	//	Creating a portal.
+	portal		= new Portal(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 100);
 
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
@@ -136,7 +143,8 @@ int main()
 
 		//	Rendering models.
 		//float t = glfwGetTime();
-		renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
+		//renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
+		portal->draw();
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -190,70 +198,6 @@ int init(GLFWwindow*& window)
 	}
 
 	return 0;
-}
-
-/// <summary>
-/// Create a new program! (Comparable to Unity shader instance i.e material.)
-/// </summary>
-/// <param name="programID">Unique identifier for the program.</param>
-/// <param name="vertex">Paths to the vertex shader.</param>
-/// <param name="fragment">Path to the fragment shader.</param>
-void createProgram(GLuint& programID, const char* vertex, const char* fragment) 
-{
-	char* vertexSrc;
-	char* fragmentSrc;
-
-	int succes;
-	char infolog[512];
-
-	loadFile(vertex, vertexSrc);
-	loadFile(fragment, fragmentSrc);
-
-	GLuint vertexShaderID, fragmentShaderID;
-
-	//	Creating vertex shader.
-	vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShaderID, 1, &vertexSrc, nullptr);
-	glCompileShader(vertexShaderID);
-
-	//	Vertex shader error handling.
-	glGetShaderiv(vertexShaderID, GL_COMPILE_STATUS, &succes);
-	if (!succes)
-	{
-		glGetShaderInfoLog(vertexShaderID, 512, nullptr, infolog);
-		std::cout << "ERROR COMPILING VERTEX SHADER\n" << infolog << std::endl;
-	}
-
-	//	Creating fragment shader.
-	fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShaderID, 1, &fragmentSrc, nullptr);
-	glCompileShader(fragmentShaderID);
-
-	//	Fragment shader error handling.
-	glGetShaderiv(fragmentShaderID, GL_COMPILE_STATUS, &succes);
-	if (!succes)
-	{
-		glGetShaderInfoLog(fragmentShaderID, 512, nullptr, infolog);
-		std::cout << "ERROR COMPILING FRAGMENT SHADER\n" << infolog << std::endl;;
-	}
-
-	programID = glCreateProgram();
-	glAttachShader(programID, vertexShaderID);
-	glAttachShader(programID, fragmentShaderID);
-	glLinkProgram(programID);
-
-	glGetProgramiv(programID, GL_LINK_STATUS, &succes);
-	if (!succes)
-	{
-		glGetProgramInfoLog(programID, 512, nullptr, infolog);
-		std::cout << "ERROR LINKING PROGRAM\n" << infolog << std::endl;;
-	}
-
-	glDeleteShader(vertexShaderID);
-	glDeleteShader(fragmentShaderID);
-
-	delete vertexSrc;
-	delete fragmentSrc;
 }
 
 /// <summary>
@@ -731,90 +675,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		keys[key] = false;
 	}
-}
-
-#pragma endregion
-
-#pragma region Utilities
-
-/// <summary>
-/// Function to load a file from the computer's directory.
-/// </summary>
-/// <param name="filename">The path to pull the data from.</param>
-/// <param name="output">Character array defining the pulled date.</param>
-void loadFile(const char* filename, char*& output) 
-{
-	//	Open the file.
-	std::ifstream file(filename, std::ios::binary);
-
-	if (file.is_open()) 
-	{
-		//	Get length of file.
-		file.seekg(0, file.end);
-		int length = file.tellg();
-		file.seekg(0, file.beg);
-
-		//	Allocate memory for the char pointer.
-		output = new char[length + 1];
-
-		//	Read data as block.
-		file.read(output, length);
-
-		//	Add null terminator to end of pointer.
-		output[length] = '\0';
-
-		//	Close the file.	
-		file.close();
-	}
-	else
-	{
-		//	If the file failed to opne, set the char pointer to NULL.
-		output = NULL;
-	}
-}
-
-/// <summary>
-/// Function to load a texture from the computers directory.
-/// </summary>
-/// <param name="path">The path to pull the texture from.</param>
-/// <param name="comp">Override for how many componenst the texture has. (Channels)</param>
-/// <returns>The texture!!</returns>
-GLuint loadTexture(const char* path, int comp)
-{
-	//	Generate and bind a texture. (Whatever that means ;_:)
-	GLuint textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_2D, textureID);
-
-	//	Setting texture parameters.
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//	Loading the texture.
-	int width, height, numChannels;
-	unsigned char* data = stbi_load(path, &width, &height, &numChannels, comp);
-
-	//	Setting data.
-	if (data)
-	{
-		if (comp != 0) numChannels = comp;
-
-		if		(numChannels == 3)	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		else if (numChannels == 4)	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-		glGenerateMipmap(GL_TEXTURE_2D);
-	}
-	else
-	{
-		std::cout << "Error loading texture: " << path << "." << std::endl;
-;	}
-
-	//	Unloading texture.
-	stbi_image_free(data);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	//	Return it.
-	return textureID;
 }
 
 #pragma endregion
