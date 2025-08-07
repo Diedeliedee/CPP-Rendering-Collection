@@ -11,6 +11,7 @@
 
 #include "util.h"
 
+#include "camera.h"
 #include "skybox.h"
 #include "terrain.h"
 #include "model.h"
@@ -21,55 +22,30 @@
 
 using namespace util;
 
-#pragma region Forward Declaration
-
 //	Main:
-int init(GLFWwindow*& window);			//	Try to find out what the difference is between (Class* Param), and (Class* &Param).
+int init(GLFWwindow*& window);
 
 //	Rendering:
 void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale);
 
-//	Input:
-void processInput(GLFWwindow* window);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-
 //	Util:
 void createShaders();
 
-#pragma endregion
-
-#pragma region Member Variables
+//	Input:
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 
 //	Window:
 const int width = 1280, height = 720;
 
 //	Program ID's:
-GLuint simpleProgram, modelProgram;
+GLuint modelProgram;
 
-//	Input:
-bool keys[1024];
-
-//	World Data:
-glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
-glm::vec3 cameraPosition = glm::vec3(0, 100, 0);
-
-//	Camera variables:
-glm::mat4 view, projection;
-float lastX, lastY;
-bool firstMouse = true;
-float camYaw, camPitch;
-glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
-
-//	Model Data:
-//Model* backpack;
-
-//	Portal:
+Camera*		camera;
 Skybox*		skybox;
 Terrain*	terrain;
 Portal*		portal;
-
-#pragma endregion
+//Model*	backpack;
 
 int main()
 {
@@ -85,9 +61,6 @@ int main()
 	//	Setting framerate cap.
 	glfwSwapInterval(1);
 
-	//	Flip texture UV's
-	//stbi_set_flip_vertically_on_load(true);
-
 	//	Load resources.
 	createShaders();
 
@@ -95,6 +68,7 @@ int main()
 	//backpack	= new Model("models/backpack/backpack.obj");
 
 	//	Creating a portal.
+	camera		= new Camera(width, height);
 	skybox		= new Skybox();
 	terrain		= new Terrain();
 	portal		= new Portal(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 100);
@@ -102,15 +76,17 @@ int main()
 	//	Create a viewport.
 	glViewport(0, 0, width, height);
 
-	//	Assign matrices.
-	view		= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-	projection	= glm::perspective(glm::radians(75.0f), width / (float)height, 0.1f, 5000.0f);
-
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
 	{
+		//	Close window if escape is pressed.
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		{
+			glfwSetWindowShouldClose(window, true);
+		}
+
 		//	Input.
-		processInput(window);
+		camera->processInput(window);
 
 		//	Clearing previous draw.
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -119,8 +95,8 @@ int main()
 		//	Rendering models.
 		//float t = glfwGetTime();
 		//renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
-		skybox->draw(view, projection, lightDirection, cameraPosition);
-		terrain->draw(view, projection, lightDirection, cameraPosition);
+		skybox->draw(camera->view,	camera->projection,	camera->cameraPosition);
+		terrain->draw(camera->view,	camera->projection,	skybox->lightDirection, camera->cameraPosition);
 		portal->draw();
 
 		//	Swap & Poll.
@@ -132,8 +108,6 @@ int main()
 	glfwTerminate();
 	return 0;
 }
-
-#pragma region Setup
 
 /// <summary>
 /// Initializes GLFW window.
@@ -162,8 +136,8 @@ int init(GLFWwindow*& window)
 	}
 
 	//	Register callbacks.
-	glfwSetCursorPosCallback(window, mouse_callback);
-	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window,	mouse_callback);
+	glfwSetKeyCallback(window,			key_callback);
 
 	glfwMakeContextCurrent(window);
 
@@ -191,10 +165,6 @@ void createShaders()
 	glUniform1i(glGetUniformLocation(modelProgram, "texture_roughness1"),	3);
 	glUniform1i(glGetUniformLocation(modelProgram, "texture_ao1"),			4);
 }
-
-#pragma endregion
-
-#pragma region Rendering
 
 void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) 
 {
@@ -228,12 +198,12 @@ void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale)
 	world = glm::scale(world, scale);
 
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "world"),			1, GL_FALSE, glm::value_ptr(world));
-	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"),			1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"),	1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"),			1, GL_FALSE, glm::value_ptr(camera->view));
+	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"),	1, GL_FALSE, glm::value_ptr(camera->projection));
 
 	//	Passing world light information into the render program.
-	glUniform3fv(glGetUniformLocation(modelProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
-	glUniform3fv(glGetUniformLocation(modelProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
+	glUniform3fv(glGetUniformLocation(modelProgram, "lightDirection"), 1, glm::value_ptr(skybox->lightDirection));
+	glUniform3fv(glGetUniformLocation(modelProgram, "cameraPosition"), 1, glm::value_ptr(camera->cameraPosition));
 
 	//	Calling the model's render program.
 	model->Draw(modelProgram);
@@ -242,93 +212,12 @@ void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale)
 	glDisable(GL_BLEND);
 }
 
-#pragma endregion
-
-#pragma region Input
-
-void processInput(GLFWwindow* window)
-{
-	//	Close window if escape is pressed.
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-	{
-		glfwSetWindowShouldClose(window, true);
-	}
-
-	//	Define false cam changed.
-	bool camChanged = false;
-
-	//	Move the camera if a key is pressed!
-	if (keys[GLFW_KEY_W])
-	{
-		cameraPosition += camQuat * glm::vec3(0, 0, 10);
-		camChanged = true;
-	}
-	if (keys[GLFW_KEY_S])
-	{
-		cameraPosition += camQuat * glm::vec3(0, 0, -10);
-		camChanged = true;
-	}
-	if (keys[GLFW_KEY_A])
-	{
-		cameraPosition += camQuat * glm::vec3(10, 0, 0);
-		camChanged = true;
-	}
-	if (keys[GLFW_KEY_D])
-	{
-		cameraPosition += camQuat * glm::vec3(-10, 0, 0);
-		camChanged = true;
-	}
-
-	//	If the camera has moved, recalculate the view matrix.
-	if (camChanged)
-	{
-		glm::vec3 camForward	= camQuat * glm::vec3(0, 0, 1);
-		glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
-
-		view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
-	}
-}
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	float x = (float)xpos;
-	float y = (float)ypos;
-
-	if (firstMouse)
-	{
-		lastX		= x;
-		lastY		= y;
-		firstMouse	= false;
-	}
-
-	float dx = x - lastX;
-	float dy = y - lastY;
-	lastX = x;
-	lastY = y;
-
-	camYaw		-= dx;
-	camPitch	= glm::clamp(camPitch + dy, -90.0f, 90.0f);
-	if (camYaw > 180.0f)	camYaw -= 360.0f;
-	if (camYaw < -180.0f)	camYaw += 360.0f;
-
-	camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
-
-	glm::vec3 camForward	= camQuat * glm::vec3(0, 0, 1);
-	glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
-
-	view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
+	camera->mouseTick(xpos, ypos);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (action == GLFW_PRESS)
-	{
-		keys[key] = true;
-	}
-	else if (action == GLFW_RELEASE)
-	{
-		keys[key] = false;
-	}
+	camera->keyTick(key, scancode, action);
 }
-
-#pragma endregion

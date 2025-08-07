@@ -13,10 +13,7 @@
 class Skybox
 {
 public:
-	GLuint program;
-
-	GLuint boxVAO, boxEBO;
-	int boxSize, boxIndexCount;
+	glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
 
 	Skybox()
 	{
@@ -27,7 +24,7 @@ public:
 		createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 	}
 
-	void draw(glm::mat4 _view, glm::mat4 _projection, glm::vec3 _lightDirection, glm::vec3 _cameraPosition)
+	void draw(glm::mat4 _view, glm::mat4 _projection, glm::vec3 _cameraPosition)
 	{
 		//	Configuring options.
 		glDisable(GL_CULL_FACE);
@@ -48,7 +45,7 @@ public:
 		glUniformMatrix4fv(glGetUniformLocation(program, "projection"),	1, GL_FALSE, glm::value_ptr(_projection));
 
 		//	Injecting relevant vectors.
-		glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(_lightDirection));
+		glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(lightDirection));
 		glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(_cameraPosition));
 
 		//	Drawing!
@@ -61,6 +58,11 @@ public:
 	}
 
 private:
+	GLuint program;
+
+	GLuint boxVAO, boxEBO;
+	int boxSize, boxIndexCount;
+
 	/// <summary>
 	/// Function that creates a box.
 	/// </summary>

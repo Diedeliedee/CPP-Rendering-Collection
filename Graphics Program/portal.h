@@ -15,13 +15,6 @@
 
 class Portal
 {
-	GLuint program;
-
-	GLuint VAO;
-	GLuint EBO;
-	int size;
-	int numIndices;
-
 public:
 	Portal(glm::vec3 _position, glm::vec3 _rotation, float _scale)
 	{
@@ -46,6 +39,13 @@ public:
 	}
 
 private:
+	GLuint program;
+
+	GLuint VAO;
+	GLuint EBO;
+	int size;
+	int numIndices;
+
 	/// <summary>
 	/// Create the data for drawing the square,
 	/// </summary>

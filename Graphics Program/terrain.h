@@ -13,12 +13,6 @@
 class Terrain
 {
 public:
-	GLuint program;
-
-	GLuint terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
-	unsigned char* heightmapTexture;
-	GLuint dirt, sand, grass, rock, snow;
-
 	Terrain()
 	{
 		//	Creating the terrain shader.
@@ -92,6 +86,12 @@ public:
 	}
 
 private:
+	GLuint program;
+
+	GLuint terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
+	unsigned char* heightmapTexture;
+	GLuint dirt, sand, grass, rock, snow;
+
 	/// <summary>
 	/// Function that creates a plane
 	/// </summary>
