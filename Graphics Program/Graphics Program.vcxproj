@@ -166,6 +166,7 @@
     <ClInclude Include="model.h" />
     <ClInclude Include="portal.h" />
     <ClInclude Include="stb_image.h" />
+    <ClInclude Include="terrain.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>

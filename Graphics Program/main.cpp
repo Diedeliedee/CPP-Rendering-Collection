@@ -12,6 +12,7 @@
 #include "util.h"
 #include "model.h"
 #include "portal.h"
+#include "terrain.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -25,11 +26,9 @@ int init(GLFWwindow*& window);			//	Try to find out what the difference is betwe
 
 //	Generating:
 void createGeometry(GLuint& VAO, GLuint& VBO, int& size, int& indices);
-unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID);
 
 //	Rendering:
 void renderSkybox();
-void renderTerrain();
 void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale);
 
 //	Input:
@@ -48,7 +47,7 @@ void createShaders();
 const int width = 1280, height = 720;
 
 //	Program ID's:
-GLuint simpleProgram, skyProgram, terrainProgram, modelProgram;
+GLuint simpleProgram, skyProgram, modelProgram;
 
 //	Input:
 bool keys[1024];
@@ -68,15 +67,11 @@ bool firstMouse = true;
 float camYaw, camPitch;
 glm::quat camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
 
-//	Terrain Data:
-GLuint terrainVAO, terrainIndexCount, heightmapID, heightNormalID;
-unsigned char* heightmapTexture;
-GLuint dirt, sand, grass, rock, snow;
-
 //	Model Data:
 //Model* backpack;
 
 //	Portal:
+Terrain* terrain;
 Portal* portal;
 
 #pragma endregion
@@ -105,19 +100,13 @@ int main()
 	createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
 	//	Creating stuff for the terrain!
-	terrainVAO		= GeneratePlane("textures/heightmap.png", heightmapTexture, GL_RGBA, 4, 250.0f, 5.0f, terrainIndexCount, heightmapID);
-	heightNormalID	= loadTexture("textures/heightnormal.png");
 
-	dirt	= loadTexture("textures/dirt.jpg");
-	sand	= loadTexture("textures/sand.jpg");
-	grass	= loadTexture("textures/grass.png", 4);
-	rock	= loadTexture("textures/rock.jpg");
-	snow	= loadTexture("textures/snow.jpg");
 
 	//	Creating stuff for models.
 	//backpack	= new Model("models/backpack/backpack.obj");
 
 	//	Creating a portal.
+	terrain		= new Terrain();
 	portal		= new Portal(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 100);
 
 	//	Create a viewport.
@@ -139,11 +128,11 @@ int main()
 
 		//	Rendering environment
 		renderSkybox();
-		renderTerrain();
 
 		//	Rendering models.
 		//float t = glfwGetTime();
 		//renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
+		terrain->draw(view, projection, lightDirection, cameraPosition);
 		portal->draw();
 
 		//	Swap & Poll.
@@ -214,17 +203,6 @@ void createShaders()
 	//	Creating program for skybox
 	createProgram(skyProgram, "shaders/skyVertex.shader", "shaders/skyFragment.shader");
 
-	//	Creating program for terrain.
-	createProgram(terrainProgram, "shaders/terrainVertex.shader", "shaders/terrainFragment.shader");
-	glUseProgram(terrainProgram);
-	glUniform1i(glGetUniformLocation(terrainProgram, "diffuseTex"),	0);
-	glUniform1i(glGetUniformLocation(terrainProgram, "normalTex"),	1);
-	glUniform1i(glGetUniformLocation(terrainProgram, "dirt"),		2);
-	glUniform1i(glGetUniformLocation(terrainProgram, "sand"),		3);
-	glUniform1i(glGetUniformLocation(terrainProgram, "grass"),		4);
-	glUniform1i(glGetUniformLocation(terrainProgram, "rock"),		5);
-	glUniform1i(glGetUniformLocation(terrainProgram, "snow"),		6);
-
 	//	Creating program for loaded model.
 	createProgram(modelProgram, "shaders/model.vs", "shaders/model.fs");
 	glUseProgram(modelProgram);
@@ -239,116 +217,6 @@ void createShaders()
 
 #pragma region Generating Geometry
 
-/// <summary>
-/// Function that creates a plane
-/// </summary>
-unsigned int GeneratePlane(const char* heightmap, unsigned char* &data, GLenum format, int comp, float hScale, float xzScale, unsigned int& indexCount, unsigned int& heightmapID)
-{
-	int width, height, channels;
-	data = nullptr;
-	if (heightmap != nullptr)
-	{
-		data = stbi_load(heightmap, &width, &height, &channels, comp);
-		if (data)
-		{
-			glGenTextures(1, &heightmapID);
-			glBindTexture(GL_TEXTURE_2D, heightmapID);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-			glGenerateMipmap(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, 0);
-		}
-	}
-
-	int stride				= 8;
-	float* vertices			= new float[(width * height) * stride];
-	unsigned int* indices	= new unsigned int[(width - 1) * (height - 1) * 6];
-
-	int index = 0;
-	for (int i = 0; i < (width * height); i++) 
-	{
-		// Calculate x/z values
-		int x = i % width;
-		int z = i / width;
-
-		float texHeight = (float)data[i * comp];
-
-		// Set position
-		vertices[index++] = x * xzScale;
-		vertices[index++] = (texHeight / 255.0f) * hScale;
-		vertices[index++] = z * xzScale;
-
-		// Set normal
-		vertices[index++] = 0;
-		vertices[index++] = 1;
-		vertices[index++] = 0;
-
-		// Set uv
-		vertices[index++] = x / (float)width;
-		vertices[index++] = z / (float)height;
-	}
-
-	// OPTIONAL TODO: Calculate normal
-	// TODO: Set normal
-
-	index = 0;
-	for (int i = 0; i < (width - 1) * (height - 1); i++)
-	{
-		// Calculate x/z values
-		int x = i % (width - 1);
-		int z = i / (width - 1);
-
-		int vertex = z * width + x;
-
-		indices[index++] = vertex;
-		indices[index++] = vertex + width;
-		indices[index++] = vertex + width + 1;
-
-		indices[index++] = vertex;
-		indices[index++] = vertex + width + 1;
-		indices[index++] = vertex + 1;
-	}
-
-	unsigned int vertSize = (width * height) * stride * sizeof(float);
-	indexCount = ((width - 1) * (height - 1) * 6);
-
-	unsigned int VAO, VBO, EBO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertSize, vertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-
-	// vertex information!
-	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, 0);
-	glEnableVertexAttribArray(0);
-	// normal
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 3));
-	glEnableVertexAttribArray(1);
-	// uv
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * stride, (void*)(sizeof(float) * 6));
-	glEnableVertexAttribArray(2);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glBindVertexArray(0);
-
-	delete[] vertices;
-	delete[] indices;
-
-	// stbi_image_free(data);
-
-	return VAO;
-}
 
 /// <summary>
 /// Function that creates a box.
@@ -494,53 +362,7 @@ void renderSkybox()
 	glEnable(GL_DEPTH);
 }
 
-void renderTerrain()
-{
-	//	Configuring options.
-	glEnable(GL_DEPTH);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
 
-	//	Setting current program.
-	glUseProgram(terrainProgram);
-
-	//	Creating world matrix.
-	glm::mat4 world	= glm::mat4(1.0f);
-
-	//	Injecting projection data.
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-	//	Injecting relevant vectors.
-	// float t = glfwGetTime();
-	// lightDirection = glm::normalize(glm::vec3(glm::sin(t), -0.5f, glm::cos(t)));
-	glUniform3fv(glGetUniformLocation(terrainProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
-	glUniform3fv(glGetUniformLocation(terrainProgram, "cameraPosition"), 1, glm::value_ptr(cameraPosition));
-
-	//	Injecting height textures.
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, heightmapID);
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, heightNormalID);
-
-	//	Injecting ground textures.
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, dirt);
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, sand);
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, grass);
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_2D, rock);
-	glActiveTexture(GL_TEXTURE6);
-	glBindTexture(GL_TEXTURE_2D, snow);
-
-	//	Drawing!
-	glBindVertexArray(terrainVAO);
-	glDrawElements(GL_TRIANGLES, terrainIndexCount, GL_UNSIGNED_INT, 0);
-}
 
 void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) 
 {
