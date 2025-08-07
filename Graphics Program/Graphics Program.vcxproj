@@ -165,6 +165,7 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="object.h" />
     <ClInclude Include="portal.h" />
     <ClInclude Include="skybox.h" />
     <ClInclude Include="stb_image.h" />

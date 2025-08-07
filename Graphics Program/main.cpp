@@ -14,22 +14,17 @@
 #include "camera.h"
 #include "skybox.h"
 #include "terrain.h"
-#include "model.h"
+#include "object.h"
 #include "portal.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+//	Fancy namespaces:
 using namespace util;
 
 //	Main:
 int init(GLFWwindow*& window);
-
-//	Rendering:
-void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale);
-
-//	Util:
-void createShaders();
 
 //	Input:
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -38,14 +33,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 //	Window:
 const int width = 1280, height = 720;
 
-//	Program ID's:
-GLuint modelProgram;
-
+//	Objects:
 Camera*		camera;
 Skybox*		skybox;
 Terrain*	terrain;
+Object*		backpack;
 Portal*		portal;
-//Model*	backpack;
 
 int main()
 {
@@ -61,16 +54,13 @@ int main()
 	//	Setting framerate cap.
 	glfwSwapInterval(1);
 
-	//	Load resources.
-	createShaders();
-
 	//	Creating stuff for models.
-	//backpack	= new Model("models/backpack/backpack.obj");
 
 	//	Creating a portal.
 	camera		= new Camera(width, height);
 	skybox		= new Skybox();
 	terrain		= new Terrain();
+	backpack	= new Object("models/backpack/backpack.obj", glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
 	portal		= new Portal(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 100);
 
 	//	Create a viewport.
@@ -97,6 +87,7 @@ int main()
 		//renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
 		skybox->draw(camera->view,	camera->projection,	camera->cameraPosition);
 		terrain->draw(camera->view,	camera->projection,	skybox->lightDirection, camera->cameraPosition);
+		backpack->draw(camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
 		portal->draw();
 
 		//	Swap & Poll.
@@ -152,71 +143,16 @@ int init(GLFWwindow*& window)
 }
 
 /// <summary>
-/// Function to initialize al the programs! Creates shader instances, and configures their variables to certain destinations.
+/// GLFW mouse callback to handle input.
 /// </summary>
-void createShaders()
-{
-	//	Creating program for loaded model.
-	createProgram(modelProgram, "shaders/model.vs", "shaders/model.fs");
-	glUseProgram(modelProgram);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_diffuse1"),		0);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_specular1"),	1);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_norma1l"),		2);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_roughness1"),	3);
-	glUniform1i(glGetUniformLocation(modelProgram, "texture_ao1"),			4);
-}
-
-void renderModel(Model* model, glm::vec3 pos, glm::vec3 rot, glm::vec3 scale) 
-{
-	//	Enabling blending.
-	//glEnable(GL_BLEND);
-
-	//	Alpha blend.
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//	Additive blend.
-	//glBlendFunc(GL_ONE, GL_ONE);
-	//	Soft additive blend.
-	//glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
-	//  Multiply blend.
-	//glBlendFunc(GL_DST_COLOR, GL_ZERO);
-	//  Double multiply blend.
-	//glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-
-	//	Configuring GPU options I think??
-	glEnable(GL_DEPTH);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-
-	glUseProgram(modelProgram);
-
-	//	Passing translation data into the program.
-	glm::mat4 world = glm::mat4(1.0f);
-
-	world = glm::translate(world, pos);
-	world = world * glm::toMat4(glm::quat(rot));
-	world = glm::scale(world, scale);
-
-	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "world"),			1, GL_FALSE, glm::value_ptr(world));
-	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"),			1, GL_FALSE, glm::value_ptr(camera->view));
-	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"),	1, GL_FALSE, glm::value_ptr(camera->projection));
-
-	//	Passing world light information into the render program.
-	glUniform3fv(glGetUniformLocation(modelProgram, "lightDirection"), 1, glm::value_ptr(skybox->lightDirection));
-	glUniform3fv(glGetUniformLocation(modelProgram, "cameraPosition"), 1, glm::value_ptr(camera->cameraPosition));
-
-	//	Calling the model's render program.
-	model->Draw(modelProgram);
-
-	//	Disabling blending.
-	glDisable(GL_BLEND);
-}
-
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	camera->mouseTick(xpos, ypos);
 }
 
+/// <summary>
+/// GLFW key callback to handle input.
+/// </summary>
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	camera->keyTick(key, scancode, action);
