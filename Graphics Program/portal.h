@@ -26,9 +26,10 @@ public:
 		scale		= glm::vec3(_scale, _scale, _scale);
 		diameter	= _scale;
 
-		util::createProgram(program, "shaders/model.vs", "shaders/portalFragment.shader");
+		util::createProgram(program, "shaders/portalVertex.shader", "shaders/portalFragment.shader");
 
-		sphere = new Model("models/portal/portal.obj");
+		sphere		= new Model("models/portal/portal.obj");
+		testTexture	= util::loadTexture("textures/rock.jpg");
 	}
 
 	void draw(unsigned int& _renderTexture, glm::mat4 _view, glm::mat4 _projection, glm::vec3 _lightDirection, glm::vec3 _cameraPosition)
@@ -60,7 +61,11 @@ public:
 		//	Passing the render texture into the shader.
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, _renderTexture);
-		glUniform1i(glGetUniformLocation(program, "renderTexture"), 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, testTexture);
+
+		glUniform1i(glGetUniformLocation(program, "renderTexture"),	0);
+		glUniform1i(glGetUniformLocation(program, "testTexture"),	1);
 
 		//	Calling the model's render program.
 		sphere->Draw(program);
@@ -70,6 +75,10 @@ public:
 	}
 
 private:
-	Model* sphere;
+	//	References:
 	GLuint program;
+	Model* sphere;
+
+	//	Debug:
+	GLuint testTexture;
 };

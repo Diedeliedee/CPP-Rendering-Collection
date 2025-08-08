@@ -1,15 +1,26 @@
 #version 330 core
 layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 vColor;
+layout(location = 1) in vec3 aNormal;
+layout(location = 2) in vec2 aTexCoords;
 
-out vec3 color;
+out vec2 TexCoords;
+out vec3 Normals;
+out vec4 FragPos;
+out vec2 ScreenCoords;
 
-uniform mat4	world,
-				view,
-				projection;
+uniform mat4 world;
+uniform mat4 view;
+uniform mat4 projection;
 
 void main()
 {
-	gl_Position	= projection * view * world * vec4(aPos, 1.0);
-	color		= vColor;
+    TexCoords   = aTexCoords;
+    FragPos     = world * vec4(aPos, 1.0);
+    gl_Position = projection * view * FragPos;
+
+    // not the most efficient, but it works
+    Normals = normalize( mat3(inverse(transpose(world)))* aNormal );
+
+    //  Calculating screen position.
+    ScreenCoords = gl_Position.xy / gl_Position.w * 0.5 + 0.5;
 }
