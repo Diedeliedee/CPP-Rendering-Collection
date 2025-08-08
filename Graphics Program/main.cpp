@@ -42,7 +42,6 @@ const int width = 1280, height = 720;
 Camera*		camera;
 Skybox*		skybox;
 Terrain*	terrain;
-Object*		backpack;
 Portal*		portalA;
 Portal*		portalB;
 
@@ -68,7 +67,6 @@ int main()
 	camera		= new Camera(width, height);
 	skybox		= new Skybox();
 	terrain		= new Terrain();
-	//backpack	= new Object("models/backpack/backpack.obj", glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
 	portalA		= new Portal(camera, glm::vec3(1000, 500, 1000), 100);
 	portalB		= new Portal(camera, glm::vec3(2000, 250, 2000), 100);
 
@@ -140,8 +138,6 @@ void drawObjects(Projection* _projection)
 	//	Drawing objects.
 	skybox->		draw(_projection->view, _projection->projection, _projection->position);
 	terrain->		draw(_projection->view, _projection->projection, skybox->lightDirection, _projection->position);
-	//backpack->	draw(_projection->view, _projection->projection, skybox->lightDirection, _projection->position);
-
 	portalA->		draw(_projection->view, _projection->projection, skybox->lightDirection, _projection->position, portalColorBufA);
 	portalB->		draw(_projection->view, _projection->projection, skybox->lightDirection, _projection->position, portalColorBufB);
 }
