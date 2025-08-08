@@ -12,17 +12,26 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "util.h"
+#include "model.h"
 
 class Portal
 {
 public:
-	Portal(glm::vec3 _position, glm::vec3 _rotation, float _scale)
+	glm::vec3 pos = glm::vec3(1, 1, 1), scale = glm::vec3(1, 1, 1);
+	float diameter;
+
+	Portal(glm::vec3 _position, float _scale)
 	{
-		util::createProgram(program, "shaders/portalVertex.shader", "shaders/terrainFragment.shader");
-		createSquare(_scale, VAO, EBO, size, numIndices);
+		pos			= _position;
+		scale		= glm::vec3(_scale, _scale, _scale);
+		diameter	= _scale;
+
+		util::createProgram(program, "shaders/model.vs", "shaders/portalFragment.shader");
+
+		sphere = new Model("models/portal/portal.obj");
 	}
 
-	void draw()
+	void draw(unsigned int& _renderTexture, glm::mat4 _view, glm::mat4 _projection, glm::vec3 _lightDirection, glm::vec3 _cameraPosition)
 	{
 		//	Configuring options.
 		glEnable(GL_DEPTH);
@@ -30,64 +39,37 @@ public:
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
 
-		//	Setting this program as the one to use.
+		//	Prioritizing program.
 		glUseProgram(program);
 
-		//	Drawing!
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+		//	Passing translation data into the program.
+		glm::mat4 world = glm::mat4(1.0f);
+
+		world = glm::translate(world, pos);
+		world = world * glm::toMat4(glm::quat(glm::vec3(0, 0, 0)));
+		world = glm::scale(world, scale);
+
+		glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(world));
+		glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(_view));
+		glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(_projection));
+
+		//	Passing world light information into the render program.
+		glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(_lightDirection));
+		glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(_cameraPosition));
+
+		//	Passing the render texture into the shader.
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, _renderTexture);
+		glUniform1i(glGetUniformLocation(program, "renderTexture"), 0);
+
+		//	Calling the model's render program.
+		sphere->Draw(program);
+
+		//	Disabling blending.
+		glDisable(GL_BLEND);
 	}
 
 private:
+	Model* sphere;
 	GLuint program;
-
-	GLuint VAO;
-	GLuint EBO;
-	int size;
-	int numIndices;
-
-	/// <summary>
-	/// Create the data for drawing the square,
-	/// </summary>
-	void createSquare(float _scale, GLuint& _VAO, GLuint& _EBO, int& _size, int& _numIndices)
-	{
-		float offset = 0.5 * _scale;
-
-		float vertices[] =
-		{
-			-offset,	-offset,	0.0f,	//	0
-			offset,		-offset,	0.0f,	//	1
-			-offset,	offset,		0.0f,	//	2
-			offset,		offset,		0.0f,	//	3
-		};
-
-		int indices[] =
-		{
-			0, 1, 2,
-			2, 1, 3
-		};
-
-		//	Calculating the size and indices.
-		int stride	= 3 * sizeof(float);
-		_size		= sizeof(vertices) / stride;
-		_numIndices = sizeof(indices) / sizeof(int);
-
-		//	Creating the VAO index, and binding it to create it's configuration.
-		glGenVertexArrays(1, &_VAO);
-		glBindVertexArray(_VAO);
-
-		//	Create buffer, bind it & assign vertices ot it.
-		GLuint VBO;
-		glGenBuffers(1, &VBO);
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		glGenBuffers(1, &_EBO);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-		//	Set layout of vertex data
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-	}
 };

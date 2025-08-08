@@ -26,6 +26,9 @@ using namespace util;
 //	Main:
 int init(GLFWwindow*& window);
 
+//	Rendering:
+void drawObjects();
+
 //	Input:
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -39,6 +42,9 @@ Skybox*		skybox;
 Terrain*	terrain;
 Object*		backpack;
 Portal*		portal;
+
+//	Framebuffer stuff
+unsigned int frameBuf, colorBuf, depthBuf;
 
 int main()
 {
@@ -54,17 +60,15 @@ int main()
 	//	Setting framerate cap.
 	glfwSwapInterval(1);
 
-	//	Creating stuff for models.
-
 	//	Creating a portal.
 	camera		= new Camera(width, height);
 	skybox		= new Skybox();
 	terrain		= new Terrain();
-	backpack	= new Object("models/backpack/backpack.obj", glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
-	portal		= new Portal(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 100);
+	//backpack	= new Object("models/backpack/backpack.obj", glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
+	portal		= new Portal(glm::vec3(1000, 500, 1000), 100);
 
-	//	Create a viewport.
-	glViewport(0, 0, width, height);
+	//	Rendering stuff.
+	createFrameBuffer(width, height, frameBuf, colorBuf, depthBuf);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
@@ -78,17 +82,27 @@ int main()
 		//	Input.
 		camera->processInput(window);
 
+		//	Creating portal buffer.
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBuf);
+		glViewport(0, 0, width, height);
+
 		//	Clearing previous draw.
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//	Rendering models.
-		//float t = glfwGetTime();
-		//renderModel(backpack, glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
-		skybox->draw(camera->view,	camera->projection,	camera->cameraPosition);
-		terrain->draw(camera->view,	camera->projection,	skybox->lightDirection, camera->cameraPosition);
-		backpack->draw(camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
-		portal->draw();
+		drawObjects();
+
+		//	Back to main stuff.
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, width, height);
+
+		//	Clearing previous draw.
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//	Rendering models again.
+		drawObjects();
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -98,6 +112,17 @@ int main()
 	//	Close the application.
 	glfwTerminate();
 	return 0;
+}
+
+/// <summary>
+/// Draws every object in the scene.
+/// </summary>
+void drawObjects()
+{
+	skybox->draw(camera->view, camera->projection, camera->cameraPosition);
+	terrain->draw(camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
+	//backpack->draw(camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
+	portal->draw(colorBuf, camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
 }
 
 /// <summary>

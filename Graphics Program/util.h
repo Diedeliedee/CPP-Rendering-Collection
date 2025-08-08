@@ -6,6 +6,11 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
+
 #include "stb_image.h"
 
 namespace util 
@@ -152,5 +157,36 @@ namespace util
 
 		delete vertexSrc;
 		delete fragmentSrc;
+	}
+
+	inline void createFrameBuffer(int width, int height, unsigned int& frameBufferID, unsigned int& colorBufferID, unsigned int& depthBufferID)
+	{
+		//	Generate frame buffer.
+		glGenFramebuffers(1, &frameBufferID);
+
+		//	Generate color buffer.
+		glGenTextures(1, &colorBufferID);
+		glBindTexture(GL_TEXTURE_2D, colorBufferID);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+
+		//	Generate depth buffer.
+		glGenRenderbuffers(1, &depthBufferID);
+		glBindRenderbuffer(GL_RENDERBUFFER, depthBufferID);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+
+		//	Attach buffers.
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBufferID, 0);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBufferID);
+
+		//	Check if succesful.
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		{
+			std::cout << "Framebuffer not complete!" << std::endl;
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 };
