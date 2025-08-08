@@ -27,6 +27,7 @@ using namespace util;
 int init(GLFWwindow*& window);
 
 //	Rendering:
+void switchToBuffer(unsigned int buffer);
 void drawObjects();
 
 //	Input:
@@ -83,25 +84,11 @@ int main()
 		camera->processInput(window);
 
 		//	Creating portal buffer.
-		glBindFramebuffer(GL_FRAMEBUFFER, frameBuf);
-		glViewport(0, 0, width, height);
-
-		//	Clearing previous draw.
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//	Rendering models.
+		switchToBuffer(frameBuf);
 		drawObjects();
 
 		//	Back to main stuff.
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, width, height);
-
-		//	Clearing previous draw.
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//	Rendering models again.
+		switchToBuffer(0);
 		drawObjects();
 
 		//	Swap & Poll.
@@ -114,11 +101,22 @@ int main()
 	return 0;
 }
 
+void switchToBuffer(unsigned int buffer)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, buffer);
+	glViewport(0, 0, width, height);
+}
+
 /// <summary>
 /// Draws every object in the scene.
 /// </summary>
 void drawObjects()
 {
+	//	Clearing previous draw.
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//	Drawing objects.
 	skybox->draw(camera->view, camera->projection, camera->cameraPosition);
 	terrain->draw(camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
 	//backpack->draw(camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
