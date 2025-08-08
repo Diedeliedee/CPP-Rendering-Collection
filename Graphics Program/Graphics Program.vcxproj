@@ -167,6 +167,7 @@
     <ClInclude Include="model.h" />
     <ClInclude Include="object.h" />
     <ClInclude Include="portal.h" />
+    <ClInclude Include="projection.h" />
     <ClInclude Include="skybox.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="terrain.h" />

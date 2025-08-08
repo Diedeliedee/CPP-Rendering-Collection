@@ -8,17 +8,15 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-class Camera
+#include "projection.h"
+
+class Camera : public Projection
 {
 public:
-	glm::vec3 cameraPosition	= glm::vec3(0, 100, 0);
-	glm::quat camQuat			= glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
-	glm::mat4 view, projection;
 
-	Camera(int _width, int _height)
+	Camera(int _width, int _height) : Projection(_width, _height)
 	{
-		view		= glm::lookAt(cameraPosition, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-		projection	= glm::perspective(glm::radians(75.0f), _width / (float)_height, 0.1f, 5000.0f);
+		
 	}
 
 	void processInput(GLFWwindow* window)
@@ -29,32 +27,29 @@ public:
 		//	Move the camera if a key is pressed!
 		if (keys[GLFW_KEY_W])
 		{
-			cameraPosition += camQuat * glm::vec3(0, 0, 10);
+			position += camQuat * glm::vec3(0, 0, 10);
 			camChanged = true;
 		}
 		if (keys[GLFW_KEY_S])
 		{
-			cameraPosition += camQuat * glm::vec3(0, 0, -10);
+			position += camQuat * glm::vec3(0, 0, -10);
 			camChanged = true;
 		}
 		if (keys[GLFW_KEY_A])
 		{
-			cameraPosition += camQuat * glm::vec3(10, 0, 0);
+			position += camQuat * glm::vec3(10, 0, 0);
 			camChanged = true;
 		}
 		if (keys[GLFW_KEY_D])
 		{
-			cameraPosition += camQuat * glm::vec3(-10, 0, 0);
+			position += camQuat * glm::vec3(-10, 0, 0);
 			camChanged = true;
 		}
 
 		//	If the camera has moved, recalculate the view matrix.
 		if (camChanged)
 		{
-			glm::vec3 camForward = camQuat * glm::vec3(0, 0, 1);
-			glm::vec3 camUp = camQuat * glm::vec3(0, 1, 0);
-
-			view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
+			recalculate();
 		}
 	}
 
@@ -75,18 +70,13 @@ public:
 		lastX		= x;
 		lastY		= y;
 
-		camYaw		-= dx;
-		camPitch	= glm::clamp(camPitch + dy, -90.0f, 90.0f);
+		yaw		-= dx;
+		pitch	= glm::clamp(pitch + dy, -90.0f, 90.0f);
 
-		if (camYaw > 180.0f)	camYaw -= 360.0f;
-		if (camYaw < -180.0f)	camYaw += 360.0f;
+		if (yaw > 180.0f)	yaw -= 360.0f;
+		if (yaw < -180.0f)	yaw += 360.0f;
 
-		camQuat = glm::quat(glm::vec3(glm::radians(camPitch), glm::radians(camYaw), 0));
-
-		glm::vec3 camForward	= camQuat * glm::vec3(0, 0, 1);
-		glm::vec3 camUp			= camQuat * glm::vec3(0, 1, 0);
-
-		view = glm::lookAt(cameraPosition, cameraPosition + camForward, camUp);
+		recalculate();
 	}
 
 	void keyTick(int _key, int _scancode, int _action)
@@ -104,8 +94,6 @@ public:
 private:
 	bool keys[1024] = { false };
 
-	float lastX = 0,	lastY = 0;
-	float camPitch = 0,	camYaw = 0;
-
+	float lastX = 0, lastY = 0;
 	bool firstMouse = true;
 };

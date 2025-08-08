@@ -16,6 +16,7 @@
 #include "terrain.h"
 #include "object.h"
 #include "portal.h"
+#include "projection.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -28,7 +29,7 @@ int init(GLFWwindow*& window);
 
 //	Rendering:
 void switchToBuffer(unsigned int buffer);
-void drawObjects();
+void drawObjects(Projection* _projection);
 
 //	Input:
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -42,10 +43,12 @@ Camera*		camera;
 Skybox*		skybox;
 Terrain*	terrain;
 Object*		backpack;
-Portal*		portal;
+Portal*		portalA;
+Portal*		portalB;
 
 //	Framebuffer stuff
-unsigned int frameBuf, colorBuf, depthBuf;
+unsigned int portalBufA, portalColorBufA, portalDepthBufA;
+unsigned int portalBufB, portalColorBufB, portalDepthBufB;
 
 int main()
 {
@@ -66,10 +69,16 @@ int main()
 	skybox		= new Skybox();
 	terrain		= new Terrain();
 	//backpack	= new Object("models/backpack/backpack.obj", glm::vec3(1000, 100, 1000), glm::vec3(0, 0, 0), glm::vec3(100, 100, 100));
-	portal		= new Portal(glm::vec3(1000, 500, 1000), 100);
+	portalA		= new Portal(camera, glm::vec3(1000, 500, 1000), 100);
+	portalB		= new Portal(camera, glm::vec3(2000, 250, 2000), 100);
 
-	//	Rendering stuff.
-	createFrameBuffer(width, height, frameBuf, colorBuf, depthBuf);
+	//	Linking portals.
+	portalA->linkedPortal = portalB;
+	portalB->linkedPortal = portalA;
+
+	//	Creating portal buffers.
+	createFrameBuffer(width, height, portalBufA, portalColorBufA, portalDepthBufA);
+	createFrameBuffer(width, height, portalBufB, portalColorBufB, portalDepthBufB);
 
 	//	Game loop.
 	while (!glfwWindowShouldClose(window))
@@ -83,13 +92,25 @@ int main()
 		//	Input.
 		camera->processInput(window);
 
-		//	Creating portal buffer.
-		switchToBuffer(frameBuf);
-		drawObjects();
+		//	Drawing to PortalA buffer.
+		switchToBuffer(portalBufA);
+		portalA->tick();
+		portalA->updatePortalProjection();
+		portalB->enabled = false;
+		drawObjects(portalA->portalProjection);
+		portalB->enabled = true;
+
+		//	Drawing to PortalB buffer.
+		switchToBuffer(portalBufB);
+		portalB->tick();
+		portalB->updatePortalProjection();
+		portalA->enabled = false;
+		drawObjects(portalB->portalProjection);
+		portalA->enabled = true;
 
 		//	Back to main stuff.
 		switchToBuffer(0);
-		drawObjects();
+		drawObjects(camera);
 
 		//	Swap & Poll.
 		glfwSwapBuffers(window);
@@ -110,17 +131,19 @@ void switchToBuffer(unsigned int buffer)
 /// <summary>
 /// Draws every object in the scene.
 /// </summary>
-void drawObjects()
+void drawObjects(Projection* _projection)
 {
 	//	Clearing previous draw.
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//	Drawing objects.
-	skybox->draw(camera->view, camera->projection, camera->cameraPosition);
-	terrain->draw(camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
-	//backpack->draw(camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
-	portal->draw(colorBuf, camera->view, camera->projection, skybox->lightDirection, camera->cameraPosition);
+	skybox->		draw(_projection->view, _projection->projection, _projection->position);
+	terrain->		draw(_projection->view, _projection->projection, skybox->lightDirection, _projection->position);
+	//backpack->	draw(_projection->view, _projection->projection, skybox->lightDirection, _projection->position);
+
+	portalA->		draw(_projection->view, _projection->projection, skybox->lightDirection, _projection->position, portalColorBufA);
+	portalB->		draw(_projection->view, _projection->projection, skybox->lightDirection, _projection->position, portalColorBufB);
 }
 
 /// <summary>
