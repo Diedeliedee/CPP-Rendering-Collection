@@ -90,21 +90,25 @@ int main()
 		//	Input.
 		camera->processInput(window);
 
+		//	Disabling portals in the buffer.
+		portalA->enabled = false;
+		portalB->enabled = false;
+
 		//	Drawing to PortalA buffer.
 		switchToBuffer(portalBufA);
 		portalA->tick();
 		portalA->updatePortalProjection();
-		portalB->enabled = false;
 		drawObjects(portalA->portalProjection);
-		portalB->enabled = true;
 
 		//	Drawing to PortalB buffer.
 		switchToBuffer(portalBufB);
 		portalB->tick();
 		portalB->updatePortalProjection();
-		portalA->enabled = false;
 		drawObjects(portalB->portalProjection);
+		
+		//	Re-enabling portals for main render!
 		portalA->enabled = true;
+		portalB->enabled = true;
 
 		//	Back to main stuff.
 		switchToBuffer(0);

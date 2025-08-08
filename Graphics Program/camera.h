@@ -27,22 +27,22 @@ public:
 		//	Move the camera if a key is pressed!
 		if (keys[GLFW_KEY_W])
 		{
-			position += camQuat * glm::vec3(0, 0, 10);
+			position += camQuat * glm::vec3(0, 0, 5);
 			camChanged = true;
 		}
 		if (keys[GLFW_KEY_S])
 		{
-			position += camQuat * glm::vec3(0, 0, -10);
+			position += camQuat * glm::vec3(0, 0, -5);
 			camChanged = true;
 		}
 		if (keys[GLFW_KEY_A])
 		{
-			position += camQuat * glm::vec3(10, 0, 0);
+			position += camQuat * glm::vec3(5, 0, 0);
 			camChanged = true;
 		}
 		if (keys[GLFW_KEY_D])
 		{
-			position += camQuat * glm::vec3(-10, 0, 0);
+			position += camQuat * glm::vec3(-5, 0, 0);
 			camChanged = true;
 		}
 
@@ -55,8 +55,8 @@ public:
 
 	void mouseTick(double& _xpos, double& _ypos)
 	{
-		float x = (float)_xpos;
-		float y = (float)_ypos;
+		float x = (float)_xpos / 2;
+		float y = (float)_ypos / 2;
 
 		if (firstMouse)
 		{
